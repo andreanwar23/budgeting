@@ -262,7 +262,11 @@ export function Charts() {
                   cx="50%"
                   cy="50%"
                   outerRadius={100}
-                  label={(entry) => `${entry.name}: ${(entry.percent || 0).toFixed(1)}%`}
+                  label={(entry) => {
+                    const item = categoryData.incomeData.find(d => d.name === entry.name);
+                    const percentage = item ? item.percentage : (entry.percent || 0) * 100;
+                    return `${entry.name}: ${percentage.toFixed(1)}%`;
+                  }}
                   onClick={(data) => handleCategoryClick(data.name, 'income')}
                   cursor="pointer"
                 >
@@ -309,7 +313,11 @@ export function Charts() {
                   cx="50%"
                   cy="50%"
                   outerRadius={100}
-                  label={(entry) => `${entry.name}: ${(entry.percent || 0).toFixed(1)}%`}
+                  label={(entry) => {
+                    const item = categoryData.expenseData.find(d => d.name === entry.name);
+                    const percentage = item ? item.percentage : (entry.percent || 0) * 100;
+                    return `${entry.name}: ${percentage.toFixed(1)}%`;
+                  }}
                   onClick={(data) => handleCategoryClick(data.name, 'expense')}
                   cursor="pointer"
                 >
@@ -377,7 +385,7 @@ export function Charts() {
           <div className="text-center py-12 text-slate-500 dark:text-slate-400">Belum ada data untuk ditampilkan</div>
         ) : (
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={categoryData.expenseData.sort((a, b) => b.value - a.value).slice(0, 10)}>
+            <BarChart data={[...categoryData.expenseData].sort((a, b) => b.value - a.value).slice(0, 10)}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
               <YAxis tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} />
