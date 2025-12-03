@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, ChevronDown } from 'lucide-react';
 import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns';
+import { id as localeId } from 'date-fns/locale';
 
 interface DateRangePickerProps {
   onDateRangeChange: (startDate: string, endDate: string) => void;
@@ -9,14 +10,19 @@ interface DateRangePickerProps {
 export function DateRangePicker({ onDateRangeChange }: DateRangePickerProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [customRange, setCustomRange] = useState(false);
-  const today = format(new Date(), 'yyyy-MM-dd');
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
-  const [selectedPreset, setSelectedPreset] = useState('today');
+  const thisMonthStart = format(startOfMonth(new Date()), 'yyyy-MM-dd');
+  const thisMonthEnd = format(endOfMonth(new Date()), 'yyyy-MM-dd');
+  const [startDate, setStartDate] = useState(thisMonthStart);
+  const [endDate, setEndDate] = useState(thisMonthEnd);
+  const [selectedPreset, setSelectedPreset] = useState('this-month');
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    onDateRangeChange(today, today);
-  }, []);
+    if (!initialized) {
+      onDateRangeChange(thisMonthStart, thisMonthEnd);
+      setInitialized(true);
+    }
+  }, [initialized, thisMonthStart, thisMonthEnd, onDateRangeChange]);
 
   const presets = [
     { id: 'today', label: 'Hari Ini', icon: '📅' },
@@ -34,49 +40,59 @@ export function DateRangePicker({ onDateRangeChange }: DateRangePickerProps) {
     switch (presetId) {
       case 'today':
         const todayStr = format(todayDate, 'yyyy-MM-dd');
-        onDateRangeChange(todayStr, todayStr);
         setStartDate(todayStr);
         setEndDate(todayStr);
         setCustomRange(false);
         setShowDropdown(false);
+        setTimeout(() => {
+          onDateRangeChange(todayStr, todayStr);
+        }, 0);
         break;
 
       case 'all':
-        onDateRangeChange('', '');
         setCustomRange(false);
         setShowDropdown(false);
+        setTimeout(() => {
+          onDateRangeChange('', '');
+        }, 0);
         break;
 
       case 'this-month':
-        const thisMonthStart = format(startOfMonth(todayDate), 'yyyy-MM-dd');
-        const thisMonthEnd = format(endOfMonth(todayDate), 'yyyy-MM-dd');
-        onDateRangeChange(thisMonthStart, thisMonthEnd);
-        setStartDate(thisMonthStart);
-        setEndDate(thisMonthEnd);
+        const monthStart = format(startOfMonth(todayDate), 'yyyy-MM-dd');
+        const monthEnd = format(endOfMonth(todayDate), 'yyyy-MM-dd');
+        setStartDate(monthStart);
+        setEndDate(monthEnd);
         setCustomRange(false);
         setShowDropdown(false);
+        setTimeout(() => {
+          onDateRangeChange(monthStart, monthEnd);
+        }, 0);
         break;
 
       case 'last-month':
         const lastMonth = subMonths(todayDate, 1);
         const lastMonthStart = format(startOfMonth(lastMonth), 'yyyy-MM-dd');
         const lastMonthEnd = format(endOfMonth(lastMonth), 'yyyy-MM-dd');
-        onDateRangeChange(lastMonthStart, lastMonthEnd);
         setStartDate(lastMonthStart);
         setEndDate(lastMonthEnd);
         setCustomRange(false);
         setShowDropdown(false);
+        setTimeout(() => {
+          onDateRangeChange(lastMonthStart, lastMonthEnd);
+        }, 0);
         break;
 
       case 'last-3-months':
         const threeMonthsAgo = subMonths(todayDate, 3);
         const threeMonthStart = format(startOfMonth(threeMonthsAgo), 'yyyy-MM-dd');
         const todayEnd = format(endOfMonth(todayDate), 'yyyy-MM-dd');
-        onDateRangeChange(threeMonthStart, todayEnd);
         setStartDate(threeMonthStart);
         setEndDate(todayEnd);
         setCustomRange(false);
         setShowDropdown(false);
+        setTimeout(() => {
+          onDateRangeChange(threeMonthStart, todayEnd);
+        }, 0);
         break;
 
       case 'custom':
@@ -101,6 +117,9 @@ export function DateRangePicker({ onDateRangeChange }: DateRangePickerProps) {
     }
     if (selectedPreset === 'today' && startDate) {
       return `Hari Ini (${format(new Date(startDate), 'dd/MM/yyyy')})`;
+    }
+    if (selectedPreset === 'this-month') {
+      return `Bulan Ini (${format(new Date(), 'MMMM yyyy', { locale: localeId })})`;
     }
     return preset?.label || 'Pilih Rentang Tanggal';
   };

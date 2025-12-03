@@ -11,6 +11,7 @@ export function Charts() {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState({
     startDate: '',
     endDate: ''
@@ -48,6 +49,7 @@ export function Charts() {
     if (!user) return;
 
     try {
+      setLoading(true);
       let query = supabase
         .from('transactions')
         .select(`
@@ -69,6 +71,8 @@ export function Charts() {
       }
     } catch (error) {
       console.error('Error loading transactions:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -143,33 +147,55 @@ export function Charts() {
   // Handler untuk klik kategori di chart
   // Fungsi ini akan dipanggil saat user klik pada bar/slice chart
   const handleCategoryClick = (categoryName: string, type: 'income' | 'expense') => {
-    // Filter transaksi berdasarkan kategori dan date range aktif
-    const categoryTransactions = transactions.filter(t => {
-      const matchesCategory = t.category?.name === categoryName;
-      const matchesType = t.type === type;
-
-      // Jika ada date filter, terapkan
-      if (dateRange.startDate && dateRange.endDate) {
-        const matchesDate = t.transaction_date >= dateRange.startDate &&
-                           t.transaction_date <= dateRange.endDate;
-        return matchesCategory && matchesType && matchesDate;
+    try {
+      if (!categoryName) {
+        console.warn('Category name is empty');
+        return;
       }
 
-      return matchesCategory && matchesType;
-    });
+      // Filter transaksi berdasarkan kategori dan date range aktif
+      const categoryTransactions = transactions.filter(t => {
+        const matchesCategory = t.category?.name === categoryName;
+        const matchesType = t.type === type;
 
-    // Hitung total amount untuk kategori ini
-    const totalAmount = categoryTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+        // Jika ada date filter, terapkan
+        if (dateRange.startDate && dateRange.endDate) {
+          const matchesDate = t.transaction_date >= dateRange.startDate &&
+                             t.transaction_date <= dateRange.endDate;
+          return matchesCategory && matchesType && matchesDate;
+        }
 
-    if (categoryTransactions.length > 0) {
-      setSelectedCategory({
-        name: categoryName,
-        type,
-        transactions: categoryTransactions as Transaction[],
-        totalAmount
+        return matchesCategory && matchesType;
       });
+
+      // Hitung total amount untuk kategori ini
+      const totalAmount = categoryTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+
+      if (categoryTransactions.length > 0) {
+        setSelectedCategory({
+          name: categoryName,
+          type,
+          transactions: categoryTransactions as Transaction[],
+          totalAmount
+        });
+      } else {
+        console.info(`No transactions found for category: ${categoryName}`);
+      }
+    } catch (error) {
+      console.error('Error handling category click:', error);
     }
   };
+
+  if (loading && transactions.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-emerald-500 border-r-transparent mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-400">Memuat laporan...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -246,10 +272,15 @@ export function Charts() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-            <PieIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            Pemasukan per Kategori
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+              <PieIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              Pemasukan per Kategori
+            </h3>
+            <span className="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
+              💡 Klik untuk detail
+            </span>
+          </div>
           {categoryData.incomeData.length === 0 ? (
             <div className="text-center py-12 text-slate-500 dark:text-slate-400">Belum ada data pemasukan</div>
           ) : (
@@ -297,10 +328,15 @@ export function Charts() {
         </div>
 
         <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-            <PieIcon className="w-5 h-5 text-rose-600 dark:text-rose-400" />
-            Pengeluaran per Kategori
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+              <PieIcon className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+              Pengeluaran per Kategori
+            </h3>
+            <span className="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
+              💡 Klik untuk detail
+            </span>
+          </div>
           {categoryData.expenseData.length === 0 ? (
             <div className="text-center py-12 text-slate-500 dark:text-slate-400">Belum ada data pengeluaran</div>
           ) : (
