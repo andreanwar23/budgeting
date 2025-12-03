@@ -55,8 +55,10 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   ];
 
   const handleItemClick = (id: string) => {
-    onViewChange(id);
     setIsOpen(false);
+    setTimeout(() => {
+      onViewChange(id);
+    }, 100);
   };
 
   return (

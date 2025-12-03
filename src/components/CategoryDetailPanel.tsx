@@ -23,8 +23,14 @@ export function CategoryDetailPanel({
   const { formatCurrency } = useSettings();
 
   const getCategoryIcon = (iconName: string) => {
-    const IconComponent = (Icons as any)[iconName.charAt(0).toUpperCase() + iconName.slice(1).replace(/-./g, x => x[1].toUpperCase())];
-    return IconComponent || Icons.Circle;
+    try {
+      if (!iconName) return Icons.Circle;
+      const formattedName = iconName.charAt(0).toUpperCase() + iconName.slice(1).replace(/-./g, x => x[1].toUpperCase());
+      const IconComponent = (Icons as any)[formattedName];
+      return IconComponent || Icons.Circle;
+    } catch {
+      return Icons.Circle;
+    }
   };
 
   // Sort transactions by amount (descending)
@@ -37,7 +43,10 @@ export function CategoryDetailPanel({
   }));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn">
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn"
+      onClick={onClose}
+    >
       <div
         className="bg-white dark:bg-slate-800 w-full sm:max-w-3xl sm:rounded-2xl rounded-t-3xl shadow-2xl max-h-[90vh] flex flex-col animate-slideUp"
         onClick={(e) => e.stopPropagation()}
@@ -84,7 +93,7 @@ export function CategoryDetailPanel({
         </div>
 
         {/* Transactions List with Horizontal Bars */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6" style={{ WebkitOverflowScrolling: 'touch' }}>
           <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-4 uppercase tracking-wider">
             Detail Transaksi
           </h3>
@@ -97,7 +106,7 @@ export function CategoryDetailPanel({
             <div className="space-y-3">
               {transactionsWithPercentage.map((transaction) => {
                 const category = categories.find(c => c.id === transaction.category_id);
-                const IconComponent = category ? getCategoryIcon(category.icon) : Icons.Circle;
+                const IconComponent = (category && category.icon) ? getCategoryIcon(category.icon) : Icons.Circle;
 
                 return (
                   <div

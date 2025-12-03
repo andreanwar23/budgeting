@@ -1,27 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import { BarChart, Bar, PieChart, Pie, LineChart, Line, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { supabase, Category } from '../lib/supabase';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { supabase, Category, Transaction } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { TrendingUp, TrendingDown, PieChart as PieIcon, BarChart3 } from 'lucide-react';
 import { DateRangePicker } from './DateRangePicker';
 import { CategoryDetailPanel } from './CategoryDetailPanel';
 import { CompactExportDropdown } from './CompactExportDropdown';
-
-interface Transaction {
-  id: string;
-  category_id: string;
-  amount: number;
-  type: 'income' | 'expense';
-  title: string;
-  description?: string;
-  transaction_date: string;
-  category: {
-    id: string;
-    name: string;
-    icon: string;
-    type: string;
-  };
-}
 
 export function Charts() {
   const { user } = useAuth();
@@ -63,26 +47,28 @@ export function Charts() {
   const loadTransactions = async () => {
     if (!user) return;
 
-    // Build query - handle "Semua Data" case where dateRange is empty
-    let query = supabase
-      .from('transactions')
-      .select(`
-        *,
-        category:categories(*)
-      `)
-      .eq('user_id', user.id);
+    try {
+      let query = supabase
+        .from('transactions')
+        .select(`
+          *,
+          category:categories(*)
+        `)
+        .eq('user_id', user.id);
 
-    // Only apply date filters if they exist (not "Semua Data")
-    if (dateRange.startDate && dateRange.endDate) {
-      query = query
-        .gte('transaction_date', dateRange.startDate)
-        .lte('transaction_date', dateRange.endDate);
-    }
+      if (dateRange.startDate && dateRange.endDate) {
+        query = query
+          .gte('transaction_date', dateRange.startDate)
+          .lte('transaction_date', dateRange.endDate);
+      }
 
-    const { data, error } = await query.order('transaction_date', { ascending: true });
+      const { data, error } = await query.order('transaction_date', { ascending: true });
 
-    if (!error && data) {
-      setTransactions(data);
+      if (!error && data) {
+        setTransactions(data as Transaction[]);
+      }
+    } catch (error) {
+      console.error('Error loading transactions:', error);
     }
   };
 
@@ -175,13 +161,14 @@ export function Charts() {
     // Hitung total amount untuk kategori ini
     const totalAmount = categoryTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
 
-    // Set state untuk menampilkan detail panel
-    setSelectedCategory({
-      name: categoryName,
-      type,
-      transactions: categoryTransactions,
-      totalAmount
-    });
+    if (categoryTransactions.length > 0) {
+      setSelectedCategory({
+        name: categoryName,
+        type,
+        transactions: categoryTransactions as Transaction[],
+        totalAmount
+      });
+    }
   };
 
   return (
@@ -275,7 +262,7 @@ export function Charts() {
                   cx="50%"
                   cy="50%"
                   outerRadius={100}
-                  label={(entry) => `${entry.name}: ${entry.percentage.toFixed(1)}%`}
+                  label={(entry) => `${entry.name}: ${(entry.percent || 0).toFixed(1)}%`}
                   onClick={(data) => handleCategoryClick(data.name, 'income')}
                   cursor="pointer"
                 >
@@ -322,7 +309,7 @@ export function Charts() {
                   cx="50%"
                   cy="50%"
                   outerRadius={100}
-                  label={(entry) => `${entry.name}: ${entry.percentage.toFixed(1)}%`}
+                  label={(entry) => `${entry.name}: ${(entry.percent || 0).toFixed(1)}%`}
                   onClick={(data) => handleCategoryClick(data.name, 'expense')}
                   cursor="pointer"
                 >
@@ -414,7 +401,7 @@ export function Charts() {
                 dataKey="value"
                 fill="#8b5cf6"
                 name="Pengeluaran"
-                onClick={(data) => handleCategoryClick(data.name, 'expense')}
+                onClick={(data) => handleCategoryClick(data.name || 'Unknown', 'expense')}
                 cursor="pointer"
                 style={{ touchAction: 'manipulation' }}
               />
