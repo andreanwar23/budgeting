@@ -70,7 +70,7 @@ export function KasbonManager() {
     e.preventDefault();
     if (!user) return;
 
-    const kasbonData = {
+    const kasbonData: any = {
       user_id: user.id,
       name: formData.name,
       amount: parseFloat(formData.amount),
@@ -79,6 +79,15 @@ export function KasbonManager() {
       status: formData.status,
       notes: formData.notes || null
     };
+
+    // Handle paid_date logic based on status
+    if (formData.status === 'paid') {
+      // If changing to paid and no paid_date exists, set current timestamp
+      kasbonData.paid_date = new Date().toISOString();
+    } else {
+      // If unpaid, clear the paid_date
+      kasbonData.paid_date = null;
+    }
 
     if (editingId) {
       const { error } = await supabase
@@ -131,10 +140,23 @@ export function KasbonManager() {
 
   const handleStatusToggle = async (kasbon: Kasbon) => {
     const newStatus = kasbon.status === 'unpaid' ? 'paid' : 'unpaid';
-    
+
+    // Prepare update data with paid_date logic
+    const updateData: any = {
+      status: newStatus
+    };
+
+    // If marking as paid, set paid_date to current timestamp
+    if (newStatus === 'paid') {
+      updateData.paid_date = new Date().toISOString();
+    } else {
+      // If marking as unpaid, clear the paid_date
+      updateData.paid_date = null;
+    }
+
     const { error } = await supabase
       .from('kasbon')
-      .update({ status: newStatus })
+      .update(updateData)
       .eq('id', kasbon.id);
 
     if (!error) {
@@ -335,15 +357,20 @@ export function KasbonManager() {
                   <p className="text-2xl font-bold text-slate-900 mb-2">
                     {formatCurrency(Number(kasbon.amount))}
                   </p>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
-                    <span>Tanggal: {formatDate(kasbon.loan_date)}</span>
-                    {kasbon.due_date && (
-                      <span>Jatuh Tempo: {formatDate(kasbon.due_date)}</span>
-                    )}
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
+                      <span>Tanggal: {formatDate(kasbon.loan_date)}</span>
+                      {kasbon.due_date && (
+                        <span>Jatuh Tempo: {formatDate(kasbon.due_date)}</span>
+                      )}
+                    </div>
                     {kasbon.paid_date && kasbon.status === 'paid' && (
-                      <span className="text-emerald-700 font-medium">
-                        ✓ Lunas: {formatDateTime(kasbon.paid_date)}
-                      </span>
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 border border-emerald-300 rounded-lg">
+                        <Check className="w-4 h-4 text-emerald-700" />
+                        <span className="text-sm text-emerald-700 font-semibold">
+                          Lunas pada: {formatDateTime(kasbon.paid_date)}
+                        </span>
+                      </div>
                     )}
                   </div>
                   {kasbon.notes && (
@@ -445,35 +472,39 @@ export function KasbonManager() {
                 />
               </div>
 
-              {/* Only show due_date and status when editing */}
-              {editingId && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Tanggal Jatuh Tempo (Opsional)
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.due_date}
-                      onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Tanggal Jatuh Tempo (Opsional)
+                </label>
+                <input
+                  type="date"
+                  value={formData.due_date}
+                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Kosongkan jika tidak ada batas waktu pelunasan
+                </p>
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Status *
-                    </label>
-                    <select
-                      value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value as 'unpaid' | 'paid' })}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    >
-                      <option value="unpaid">Belum Lunas</option>
-                      <option value="paid">Lunas</option>
-                    </select>
-                  </div>
-                </>
+              {/* Only show status field when editing */}
+              {editingId && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Status *
+                  </label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as 'unpaid' | 'paid' })}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  >
+                    <option value="unpaid">Belum Lunas</option>
+                    <option value="paid">Lunas</option>
+                  </select>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Mengubah status ke "Lunas" akan mencatat waktu pelunasan
+                  </p>
+                </div>
               )}
 
               <div>
