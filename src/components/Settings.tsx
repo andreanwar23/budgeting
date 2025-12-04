@@ -227,29 +227,14 @@ export function Settings() {
                     {language === 'en' ? 'BU - Budgeting Uang' : 'BU - Budgeting Uang'}
                   </p>
                   <p className="mt-1">
-                    {language === 'en' ? 'Version 3.1.0' : 'Versi 3.1.0'}
-                  </p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
-                    {language === 'en' ? 'Last updated: December 4, 2025' : 'Terakhir diperbarui: 4 Desember 2025'}
+                    {language === 'en' ? 'Version 3.0.0' : 'Versi 3.0.0'}
                   </p>
                 </div>
                 <p>
                   {language === 'en'
-                    ? 'A modern, full-featured personal finance management application built with React, TypeScript, and Supabase. Track your income, expenses, and loans with powerful analytics and beautiful visualizations. Now with enhanced kasbon management and improved reporting!'
-                    : 'Aplikasi manajemen keuangan pribadi yang modern dan lengkap, dibangun dengan React, TypeScript, dan Supabase. Lacak pemasukan, pengeluaran, dan kasbon Anda dengan analitik yang powerful dan visualisasi yang indah. Kini dengan manajemen kasbon yang ditingkatkan dan pelaporan yang lebih baik!'}
+                    ? 'A modern, full-featured personal finance management application built with React, TypeScript, and Supabase. Track your income and expenses with powerful analytics and beautiful visualizations.'
+                    : 'Aplikasi manajemen keuangan pribadi yang modern dan lengkap, dibangun dengan React, TypeScript, dan Supabase. Lacak pemasukan dan pengeluaran Anda dengan analitik yang powerful dan visualisasi yang indah.'}
                 </p>
-                <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-700">
-                  <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 mb-1">
-                    {language === 'en' ? '✨ What\'s New in v3.1.0:' : '✨ Apa yang Baru di v3.1.0:'}
-                  </p>
-                  <ul className="text-xs space-y-0.5">
-                    <li>• {language === 'en' ? 'Enhanced Kasbon: Automatic paid date tracking' : 'Kasbon Ditingkatkan: Pelacakan tanggal pelunasan otomatis'}</li>
-                    <li>• {language === 'en' ? 'Simplified Add Kasbon form (faster entry)' : 'Form Tambah Kasbon disederhanakan (entri lebih cepat)'}</li>
-                    <li>• {language === 'en' ? 'Fixed report category clicks & date filter' : 'Perbaikan klik kategori laporan & filter tanggal'}</li>
-                    <li>• {language === 'en' ? 'Default current month view in reports' : 'Tampilan bulan ini secara default di laporan'}</li>
-                    <li>• {language === 'en' ? 'APK build support (convert to mobile app)' : 'Dukungan build APK (konversi ke aplikasi mobile)'}</li>
-                  </ul>
-                </div>
                 <div className="pt-3 border-t border-slate-200 dark:border-slate-600">
                   <p className="font-medium text-slate-700 dark:text-slate-300">
                     {language === 'en' ? 'Key Features:' : 'Fitur Utama:'}
@@ -258,9 +243,8 @@ export function Settings() {
                     <li>{language === 'en' ? 'Income & expense tracking with detailed analytics' : 'Pelacakan pemasukan & pengeluaran dengan analitik detail'}</li>
                     <li>{language === 'en' ? 'Custom category management (CRUD)' : 'Manajemen kategori kustom (CRUD)'}</li>
                     <li>{language === 'en' ? 'Interactive charts & reports with clickable insights' : 'Grafik & laporan interaktif dengan insight yang dapat diklik'}</li>
-                    <li>{language === 'en' ? 'Enhanced loan tracking (Kasbon) with auto paid-date' : 'Sistem pelacakan kasbon dengan tanggal pelunasan otomatis'}</li>
-                    <li>{language === 'en' ? 'Advanced date filtering (default to current month)' : 'Filter tanggal lanjutan (default bulan ini)'}</li>
-                    <li>{language === 'en' ? 'Export to Excel/Image/APK' : 'Ekspor ke Excel/Gambar/APK'}</li>
+                    <li>{language === 'en' ? 'Loan tracking system (Kasbon)' : 'Sistem pelacakan kasbon'}</li>
+                    <li>{language === 'en' ? 'Advanced date filtering & export to Excel/Image' : 'Filter tanggal lanjutan & ekspor ke Excel/Gambar'}</li>
                     <li>{language === 'en' ? 'Multi-currency support (IDR/USD)' : 'Dukungan multi-mata uang (IDR/USD)'}</li>
                     <li>{language === 'en' ? 'Dark mode & bilingual (EN/ID)' : 'Mode gelap & dwi bahasa (EN/ID)'}</li>
                     <li>{language === 'en' ? 'Profile management with avatar upload' : 'Manajemen profil dengan upload avatar'}</li>

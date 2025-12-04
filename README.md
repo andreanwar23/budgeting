@@ -1,13 +1,13 @@
 # Finance Tracker - Aplikasi Catatan Keuangan
 
-![Version](https://img.shields.io/badge/version-3.1.0-blue.svg)
+![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)
 
-Aplikasi web modern untuk mengelola keuangan pribadi dengan fitur lengkap, responsive, dan dapat dikonversi menjadi APK. Dilengkapi dengan dark mode, multi-bahasa, multi-currency, kasbon management, dan antarmuka yang intuitif.
+Aplikasi web modern untuk mengelola keuangan pribadi dengan fitur lengkap, responsive, dan dapat dikonversi menjadi APK. Dilengkapi dengan dark mode, multi-bahasa, multi-currency, dan antarmuka yang intuitif.
 
-**Versi:** 3.1.0
-**Terakhir Diperbarui:** December 4, 2025
+**Versi:** 3.0.0
+**Terakhir Diperbarui:** December 2025
 **Status:** Production Ready ✅
 
 ---
@@ -15,15 +15,14 @@ Aplikasi web modern untuk mengelola keuangan pribadi dengan fitur lengkap, respo
 ## 📋 Daftar Isi
 
 - [Fitur Utama](#-fitur-utama)
-- [Fitur Terbaru v3.1.0](#-fitur-terbaru-v310)
-- [Bug Fixes](#-bug-fixes)
+- [Fitur Terbaru v3.0.0](#-fitur-terbaru-v300)
+- [Bug Fixes](#-bug-fixes-v300)
 - [Screenshot](#-screenshot)
 - [Teknologi](#️-teknologi)
 - [Instalasi](#-instalasi)
 - [Setup Database](#-setup-database)
 - [Penggunaan](#-penggunaan)
 - [Deployment](#-deployment)
-- [Build APK](#-build-apk)
 - [Troubleshooting](#-troubleshooting)
 
 ---
@@ -44,13 +43,6 @@ Aplikasi web modern untuk mengelola keuangan pribadi dengan fitur lengkap, respo
 - 📅 Filter tanggal pintar (hari ini, bulan ini, custom range)
 - 🎨 Dark mode support
 
-### Manajemen Kasbon (Cash Advance/Loan)
-- 💰 Track pinjaman masuk dan keluar
-- 📊 Summary total kasbon (unpaid & paid)
-- ✅ Tandai lunas dengan otomatis set paid date
-- 🔍 Filter & search kasbon
-- 📅 Auto-tracking tanggal pelunasan
-
 ### Pengaturan & Kustomisasi
 - 🌙 **Dark/Light Mode** - Toggle tema dengan persistensi
 - 🌍 **Multi-bahasa** - English & Bahasa Indonesia
@@ -64,34 +56,7 @@ Aplikasi web modern untuk mengelola keuangan pribadi dengan fitur lengkap, respo
 
 ---
 
-## 🎉 Fitur Terbaru (v3.1.0)
-
-### ✅ Enhanced Kasbon Management
-**Improvements:**
-- 🎯 Simplified Add Kasbon form (remove status & due date for new entries)
-- 📅 Automatic paid date tracking when kasbon marked as paid
-- 💾 Database trigger auto-sets paid_date on status change
-- 📊 Display paid date with timestamp in kasbon list
-- ✅ New entries always default to "unpaid" status
-- 🔧 Edit form still allows status & due date modification
-
-**Benefits:**
-- Faster kasbon entry process
-- Accurate payment tracking
-- Better audit trail
-- Cleaner user interface
-
-### ✅ Report Enhancements (v3.0.1)
-**Fixed:**
-- Category click functionality fully restored
-- Date filter now works on first click
-- Default date range set to current month
-- Loading states prevent blank screens
-- Percentage calculations corrected
-
----
-
-## 🎉 Previous Features (v3.0.0)
+## 🎉 Fitur Terbaru (v3.0.0)
 
 ### ✅ Dark/Light Mode Theme Toggle
 **Fitur:**
@@ -141,22 +106,7 @@ Aplikasi web modern untuk mengelola keuangan pribadi dengan fitur lengkap, respo
 
 ---
 
-## 🐛 Bug Fixes
-
-### v3.1.0 Fixes
-**Fixed: Kasbon Entry Bug**
-- Form now properly submits new kasbon entries
-- Removed unnecessary fields from Add form
-- Simplified workflow for better UX
-
-**Fixed: Report Issues**
-- Array mutation error when sorting categories
-- Percentage calculation in charts
-- Date filter first-click bug
-- Category detail panel crashes
-- Mobile white screen issues
-
-### v3.0.0 Fixes
+## 🐛 Bug Fixes (v3.0.0)
 
 ### Fixed: Mobile Sidebar Scrolling Issue (iOS Safari)
 **Masalah:**
@@ -558,119 +508,6 @@ base: '/finance-tracker/'
 
 ---
 
-## 📱 Build APK
-
-### Prerequisites for APK Build
-
-**Option 1: Capacitor (Recommended)**
-
-```bash
-# 1. Install Capacitor
-npm install @capacitor/core @capacitor/cli
-npm install @capacitor/android
-
-# 2. Initialize Capacitor
-npx cap init
-
-# Configure:
-# App name: Finance Tracker
-# App ID: com.financetracker.app
-# Web dir: dist
-
-# 3. Build web assets
-npm run build
-
-# 4. Add Android platform
-npx cap add android
-
-# 5. Sync files
-npx cap sync
-
-# 6. Open in Android Studio
-npx cap open android
-
-# 7. Build APK in Android Studio:
-# Build → Generate Signed Bundle / APK → APK
-# Choose release/debug variant
-```
-
-**Option 2: PWA to APK (Simpler)**
-
-```bash
-# 1. Install PWABuilder CLI
-npm install -g @pwabuilder/cli
-
-# 2. Build web assets
-npm run build
-
-# 3. Generate APK
-pwabuilder package dist
-
-# Or use online tool:
-# Visit: https://www.pwabuilder.com
-# Enter your deployed URL
-# Download Android Package
-```
-
-### APK Build Configuration
-
-**capacitor.config.ts:**
-```typescript
-import { CapacitorConfig } from '@capacitor/cli';
-
-const config: CapacitorConfig = {
-  appId: 'com.financetracker.app',
-  appName: 'Finance Tracker',
-  webDir: 'dist',
-  bundledWebRuntime: false,
-  server: {
-    androidScheme: 'https'
-  },
-  android: {
-    buildOptions: {
-      keystorePath: 'path/to/keystore.jks',
-      keystoreAlias: 'alias',
-    }
-  }
-};
-
-export default config;
-```
-
-**AndroidManifest.xml permissions:**
-```xml
-<uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-```
-
-### Testing APK
-
-```bash
-# Install on device via ADB
-adb install app-release.apk
-
-# Or transfer APK to device and install manually
-```
-
-### APK Signing (Production)
-
-```bash
-# 1. Generate keystore
-keytool -genkey -v -keystore my-release-key.jks \
-  -keyalg RSA -keysize 2048 -validity 10000 \
-  -alias finance-tracker
-
-# 2. Sign APK
-jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 \
-  -keystore my-release-key.jks app-release-unsigned.apk \
-  finance-tracker
-
-# 3. Zipalign
-zipalign -v 4 app-release-unsigned.apk finance-tracker.apk
-```
-
----
-
 ## 🔧 Troubleshooting
 
 ### Build Errors
@@ -786,33 +623,6 @@ supabase/migrations/
 
 ## 📝 Changelog
 
-### v3.1.0 (December 4, 2025)
-**Kasbon Improvements:**
-- ✅ Fixed kasbon entry bug preventing adding new entries
-- ✅ Removed due date field from Add Kasbon form
-- ✅ Removed status field from Add Kasbon form (always unpaid by default)
-- ✅ Added paid_date column with automatic tracking
-- ✅ Database trigger auto-sets paid_date when marked as paid
-- ✅ Display paid date with timestamp in kasbon list
-- ✅ Edit form retains status & due date options
-
-**Report Enhancements:**
-- ✅ Fixed category click showing white screen
-- ✅ Fixed date filter not working on first click
-- ✅ Set default date range to current month
-- ✅ Fixed percentage calculation errors
-- ✅ Added loading states to prevent blank screens
-- ✅ Fixed array mutation errors in charts
-
-**Documentation:**
-- ✅ Updated README with APK build instructions
-- ✅ Comprehensive changelog
-- ✅ Updated About section in Settings
-
-**Build:**
-- ✅ Added Capacitor/PWA build configuration
-- ✅ APK generation guide
-
 ### v3.0.0 (December 2025)
 - ✅ Fixed mobile sidebar scrolling (iOS Safari)
 - ✅ Fixed default date in transaction form
@@ -840,4 +650,4 @@ supabase/migrations/
 
 **Made with ❤️ in Indonesia**
 
-**Version 3.1.0** | **December 4, 2025** | **Production Ready ✅**
+**Version 3.0.0** | **December 2025** | **Production Ready ✅**
