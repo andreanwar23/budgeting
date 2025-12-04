@@ -7,143 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.1.0] - 2025-12-04
-
-### 🎉 Added
-
-#### Kasbon Management Enhancements
-- **Automatic Paid Date Tracking** - System automatically records timestamp when kasbon marked as paid
-- **Database Trigger** - Auto-sets `paid_date` column when status changes to 'paid'
-- **Paid Date Display** - Show payment timestamp in kasbon list with formatted date/time
-- **Simplified Add Form** - Removed status and due date fields for new kasbon entries
-- **Smart Defaults** - New kasbon entries always default to 'unpaid' status
-- **Cleaner UX** - Faster kasbon creation workflow with fewer fields
-
-#### Report Improvements
-- **Category Click Functionality** - Fully restored click-to-detail on all charts
-- **Default Current Month** - Date filter now defaults to current month on page load
-- **First-Click Fix** - Date filter responds immediately on first interaction
-- **Loading States** - Added spinners to prevent blank screens during data load
-- **Error Prevention** - Comprehensive error handling throughout Charts component
-
-#### APK Build Support
-- **Capacitor Integration** - Step-by-step guide for building Android APK
-- **PWA to APK** - Alternative simpler conversion method documented
-- **Build Configuration** - Complete capacitor.config.ts example
-- **Signing Instructions** - Production APK signing guide
-- **Testing Guide** - ADB installation and testing procedures
-
-### 🔧 Changed
-
-#### Kasbon Component (KasbonManager.tsx)
-- **Interface Update** - Added `paid_date?: string` to Kasbon interface
-- **Conditional Form Fields** - Status and due_date only shown when editing
-- **Form Simplification** - Add Kasbon form now has only essential fields:
-  - Name (required)
-  - Amount (required)
-  - Loan date (required)
-  - Notes (optional)
-- **Display Enhancement** - Added `formatDateTime()` function for paid date display
-- **Edit Preservation** - Edit form still allows full control over all fields
-
-#### Reports Component (Charts.tsx)
-- **Array Immutability** - Fixed mutation error with spread operator `[...array]`
-- **Percentage Calculation** - Corrected chart label percentage display
-- **Loading State** - Added `loading` state with spinner component
-- **Error Handling** - Try-catch blocks in category click handler
-- **Type Safety** - Proper Transaction type casting throughout
-
-#### DateRangePicker Component
-- **Default Month** - Initializes with current month start/end dates
-- **First-Click Fix** - Added setTimeout pattern to prevent race conditions
-- **State Management** - Improved initialization with `initialized` flag
-- **Locale Support** - Added Indonesian locale for month names
-
-### 🐛 Fixed
-
-#### Kasbon Issues
-- **Entry Bug** - Fixed bug preventing new kasbon from being added
-- **Form Validation** - Removed required validation from optional fields
-- **Database Sync** - Proper handling of paid_date column
-
-#### Report Issues
-- **White Screen on Category Click** - Fixed with proper error boundaries
-- **Array Sort Mutation** - Fixed "Cannot assign to read only property" error
-- **Percentage Display** - Corrected from 0.8% to actual percentage values
-- **First Click Bug** - Date filter now works on initial interaction
-- **Blank Screen** - Loading states prevent white screen display
-- **Type Mismatches** - Resolved Transaction type inconsistencies
-
-#### General Improvements
-- **Error Boundaries** - All views wrapped in ErrorBoundary components
-- **Loading Indicators** - Added throughout application
-- **Null Safety** - Defensive checks for undefined/null values
-- **Mobile Touch** - Improved touch event handling
-
-### 📚 Documentation
-
-#### README.md Updates
-- **Version Bump** - Updated to 3.1.0
-- **APK Build Section** - Complete guide with two methods (Capacitor & PWA)
-- **Kasbon Features** - Documented all kasbon improvements
-- **Report Enhancements** - Listed all fixes and improvements
-- **Configuration Examples** - Added capacitor.config.ts and manifest.xml
-- **Signing Guide** - Production APK signing instructions
-
-#### CHANGELOG.md Updates
-- **v3.1.0 Entry** - This comprehensive changelog
-- **Detailed Changes** - All modifications documented
-- **Upgrade Guide** - Instructions for upgrading from v3.0.0
-
-#### Settings About Section
-- **Version Display** - Updated to v3.1.0
-- **Recent Changes** - Listed major improvements
-- **Feature Highlights** - Kasbon and report enhancements
-
-### 🚀 Deployment
-
-#### Database Migration
-- **New Migration** - `20251204000001_add_paid_date_to_kasbon.sql`
-- **paid_date Column** - Added to kasbon table
-- **Trigger Function** - `set_kasbon_paid_date()` for automatic updates
-- **Data Migration** - Backfill existing paid kasbon with updated_at timestamp
-
-#### Build Process
-- **APK Support** - Added Capacitor dependencies to package.json
-- **Configuration Files** - Created capacitor.config.ts template
-- **Platform Support** - Android platform ready for deployment
-
-### ✨ Improvements
-
-#### User Experience
-- **Faster Kasbon Entry** - 50% fewer fields in Add form
-- **Automatic Tracking** - No manual paid date entry needed
-- **Better Feedback** - Loading spinners and error messages
-- **Responsive Design** - Improved mobile experience
-
-#### Developer Experience
-- **Type Safety** - Enhanced TypeScript definitions
-- **Error Handling** - Comprehensive try-catch blocks
-- **Code Organization** - Better separation of concerns
-- **Documentation** - Inline comments and guides
-
-#### Performance
-- **Loading Optimization** - Efficient data fetching
-- **State Management** - Reduced unnecessary re-renders
-- **Bundle Size** - Maintained optimal size despite new features
-
-### 📊 Statistics
-
-- **Lines Changed:** ~500 (code + documentation)
-- **Files Modified:** 7 (KasbonManager, Charts, DateRangePicker, README, CHANGELOG, Settings, Migration)
-- **Files Created:** 1 (Migration: add_paid_date_to_kasbon.sql)
-- **Bug Fixes:** 12+ critical issues resolved
-- **New Features:** 8+ enhancements added
-- **Build Size:** ~1,852 KB (minimal increase)
-- **Build Time:** ~14 seconds
-
----
-
 ## [2.4.0] - 2025-11-22
 
 ### 🎉 Added
@@ -313,9 +176,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Release Date | Key Features | Status |
 |---------|--------------|--------------|--------|
-| 3.1.0 | 2025-12-04 | Kasbon enhancements, Report fixes, APK build | ✅ Current |
-| 3.0.0 | 2025-12-03 | Dark mode, Multi-language, Multi-currency, Settings | Superseded |
-| 2.4.0 | 2025-11-22 | Monthly balance, 4-col layout, docs | Superseded |
+| 2.4.0 | 2025-11-22 | Monthly balance, 4-col layout, docs | ✅ Current |
 | 2.3.0 | 2025-11-22 | Export dropdown, date fix | Superseded |
 | 2.2.0 | 2025-11-22 | UI/UX enhancements | Superseded |
 | 2.1.0 | 2025-11-21 | Auto date detection | Superseded |
@@ -324,56 +185,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## Upgrade Guide
-
-### From 3.0.0 to 3.1.0
-
-**No breaking changes** - Safe to upgrade
-
-**Database Migration Required:**
-```sql
--- Run in Supabase SQL Editor
--- File: supabase/migrations/20251204000001_add_paid_date_to_kasbon.sql
-```
-
-**Steps:**
-```bash
-git pull origin main
-npm install
-npm run build
-```
-
-**What's New:**
-- Kasbon paid date tracking (automatic)
-- Simplified kasbon entry form
-- Report improvements (automatic)
-- APK build support (optional)
-
-**Configuration:**
-- No changes needed for existing functionality
-- For APK: Follow "Build APK" section in README
-- Environment variables unchanged
-- Database migration auto-applied
-
-### From 2.4.0 to 3.1.0
-
-**Breaking Changes:** None (major version due to significant features)
-
-**Steps:**
-```bash
-git pull origin main
-npm install
-# Apply all v3.0.0 and v3.1.0 migrations
-npm run build
-```
-
-**New Features Available:**
-- Dark/Light mode theme
-- Multi-language support (EN/ID)
-- Multi-currency support (USD/IDR)
-- Enhanced kasbon management
-- Improved reporting system
-- Settings page
-- APK build capability
 
 ### From 2.3.0 to 2.4.0
 
@@ -512,6 +323,6 @@ MIT License - See [LICENSE](LICENSE) file
 
 ---
 
-**Last Updated:** December 4, 2025
-**Current Version:** 3.1.0
+**Last Updated:** November 22, 2025  
+**Current Version:** 2.4.0  
 **Status:** Production Ready ✅
