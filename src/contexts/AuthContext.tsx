@@ -193,11 +193,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
 
         // Return a custom error
-        const unverifiedError: AuthError = {
+        const unverifiedError = {
           name: 'Email not confirmed',
           message: 'Email not confirmed. Please check your inbox and verify your email address before signing in.',
           status: 400
-        };
+        } as AuthError;
 
         return { error: unverifiedError };
       }

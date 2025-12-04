@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, Globe, DollarSign, Info, Sun, Moon, Check, User } from 'lucide-react';
 import { useSettings, Language, Currency } from '../contexts/SettingsContext';
 import { ProfileManager } from './ProfileManager';
@@ -7,6 +7,19 @@ export function Settings() {
   const { language, currency, theme, setLanguage, setCurrency, setTheme } = useSettings();
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'preferences' | 'profile'>('preferences');
+
+  useEffect(() => {
+    // Listen for profile navigation event from sidebar
+    const handleNavigateToProfile = () => {
+      setActiveTab('profile');
+    };
+
+    window.addEventListener('navigate-to-profile', handleNavigateToProfile);
+
+    return () => {
+      window.removeEventListener('navigate-to-profile', handleNavigateToProfile);
+    };
+  }, []);
 
   const handleLanguageChange = async (newLanguage: Language) => {
     setSaving(true);

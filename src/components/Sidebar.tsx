@@ -110,10 +110,10 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
             <button
               onClick={() => {
                 handleItemClick('settings');
+                // Dispatch custom event to tell Settings component to show profile tab
                 setTimeout(() => {
-                  const profileTab = document.querySelector('[data-tab="profile"]') as HTMLElement;
-                  if (profileTab) profileTab.click();
-                }, 100);
+                  window.dispatchEvent(new CustomEvent('navigate-to-profile'));
+                }, 150);
               }}
               className="w-full flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 p-2 rounded-lg transition-colors duration-200"
             >

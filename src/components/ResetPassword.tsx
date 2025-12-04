@@ -15,12 +15,20 @@ export function ResetPassword() {
   const [hasSession, setHasSession] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setHasSession(!!session);
-      if (!session) {
+    // Check if user came from a valid password reset link
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      // Session should exist when coming from password reset email
+      if (session) {
+        setHasSession(true);
+      } else {
+        setHasSession(false);
         setError('Link reset password tidak valid atau sudah kadaluarsa. Silakan minta link baru.');
       }
-    });
+    };
+
+    checkSession();
   }, []);
 
   useEffect(() => {
