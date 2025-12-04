@@ -23,7 +23,6 @@ interface KasbonFormData {
   name: string;
   amount: string;
   loan_date: string;
-  due_date: string;
   status: 'unpaid' | 'paid';
   notes: string;
 }
@@ -41,7 +40,6 @@ export function KasbonManager() {
     name: '',
     amount: '',
     loan_date: new Date().toISOString().split('T')[0],
-    due_date: '',
     status: 'unpaid',
     notes: ''
   });
@@ -75,7 +73,6 @@ export function KasbonManager() {
       name: formData.name,
       amount: parseFloat(formData.amount),
       loan_date: formData.loan_date,
-      due_date: formData.due_date || null,
       status: formData.status,
       notes: formData.notes || null
     };
@@ -117,7 +114,6 @@ export function KasbonManager() {
       name: kasbon.name,
       amount: kasbon.amount.toString(),
       loan_date: kasbon.loan_date,
-      due_date: kasbon.due_date || '',
       status: kasbon.status,
       notes: kasbon.notes || ''
     });
@@ -169,7 +165,6 @@ export function KasbonManager() {
       name: '',
       amount: '',
       loan_date: new Date().toISOString().split('T')[0],
-      due_date: '',
       status: 'unpaid',
       notes: ''
     });
@@ -470,21 +465,6 @@ export function KasbonManager() {
                   onChange={(e) => setFormData({ ...formData, loan_date: e.target.value })}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Tanggal Jatuh Tempo (Opsional)
-                </label>
-                <input
-                  type="date"
-                  value={formData.due_date}
-                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                />
-                <p className="text-xs text-slate-500 mt-1">
-                  Kosongkan jika tidak ada batas waktu pelunasan
-                </p>
               </div>
 
               {/* Only show status field when editing */}
