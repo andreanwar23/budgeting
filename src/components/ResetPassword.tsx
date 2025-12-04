@@ -72,6 +72,12 @@ export function ResetPassword() {
         setSuccess(true);
         setPassword('');
         setConfirmPassword('');
+
+        // CRITICAL FIX: Sign out to clear recovery session
+        // This prevents "Failed to fetch" errors when logging in with new password
+        setTimeout(async () => {
+          await supabase.auth.signOut();
+        }, 2000); // Wait 2 seconds for user to see success message
       }
     } catch (err) {
       setError('Terjadi kesalahan. Silakan coba lagi.');
@@ -80,7 +86,15 @@ export function ResetPassword() {
     }
   };
 
-  const handleBackToLogin = () => {
+  const handleBackToLogin = async () => {
+    // Ensure session is completely cleared before redirect
+    await supabase.auth.signOut();
+
+    // Clear any lingering session storage
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // Redirect to login page
     window.location.href = '/';
   };
 

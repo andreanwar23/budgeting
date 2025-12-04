@@ -85,13 +85,21 @@ export function AuthForm() {
             setVerificationEmail(email);
           } else if (error.message.includes('Invalid login credentials')) {
             setError('Email atau password salah.');
+          } else if (error.message.includes('fetch') || error.message.includes('network')) {
+            setError('Gagal terhubung ke server. Periksa koneksi internet Anda dan coba lagi.');
           } else {
             setError(error.message);
           }
         }
       }
-    } catch (err) {
-      setError('Terjadi kesalahan. Silakan coba lagi.');
+    } catch (err: any) {
+      // Handle network errors specifically
+      if (err.message && (err.message.includes('fetch') || err.message.includes('Failed to fetch'))) {
+        setError('Gagal terhubung ke server. Silakan:\n1. Periksa koneksi internet\n2. Clear cache browser (Ctrl+Shift+Delete)\n3. Coba lagi dalam beberapa saat');
+      } else {
+        setError('Terjadi kesalahan. Silakan coba lagi.');
+      }
+      console.error('Auth error:', err);
     } finally {
       setLoading(false);
     }
