@@ -29,6 +29,9 @@ export function Charts() {
     if (user) {
       loadCategories();
       loadTransactions();
+    } else {
+      // If no user, set loading to false immediately
+      setLoading(false);
     }
   }, [user, dateRange]);
 
@@ -66,11 +69,15 @@ export function Charts() {
 
       const { data, error } = await query.order('transaction_date', { ascending: true });
 
-      if (!error && data) {
+      if (error) {
+        console.error('Error loading transactions:', error);
+        setTransactions([]);
+      } else if (data) {
         setTransactions(data as Transaction[]);
       }
     } catch (error) {
       console.error('Error loading transactions:', error);
+      setTransactions([]);
     } finally {
       setLoading(false);
     }
@@ -186,6 +193,24 @@ export function Charts() {
     }
   };
 
+  // Show message when not authenticated
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center bg-white dark:bg-slate-800 p-8 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="text-slate-400 mb-4">
+            <svg className="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <p className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-2">Login Diperlukan</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400">Silakan login terlebih dahulu untuk melihat laporan keuangan</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading only when user exists and data is being fetched
   if (loading && transactions.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
