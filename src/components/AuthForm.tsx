@@ -110,23 +110,85 @@ export function AuthForm() {
     setError('');
     setLoading(true);
 
+    // Validate email format first
+    if (!forgotPasswordEmail || !forgotPasswordEmail.includes('@')) {
+      setError('Masukkan alamat email yang valid');
+      setLoading(false);
+      return;
+    }
+
     try {
+      // OPTION 1: Secure Implementation (Recommended - No email validation)
+      // Uncomment this for production use - doesn't reveal if email exists
+      /*
       const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
 
       if (error) {
-        if (error.message.includes('User not found')) {
-          setError('Email tidak terdaftar.');
+        setError('Terjadi kesalahan. Silakan coba lagi.');
+      } else {
+        setResetEmailSent(true);
+        setForgotPasswordEmail('');
+      }
+      */
+
+      // OPTION 2: With Email Validation (As Requested)
+      // ⚠️ WARNING: This reveals if emails exist - less secure!
+      // Check if user exists using Edge Function
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const checkResponse = await fetch(
+        `${supabaseUrl}/functions/v1/check-user-exists`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email: forgotPasswordEmail }),
+        }
+      );
+
+      if (!checkResponse.ok) {
+        const errorData = await checkResponse.json();
+        throw new Error(errorData.error || 'Failed to verify email');
+      }
+
+      const checkData = await checkResponse.json();
+
+      // If user doesn't exist, show clear error message
+      if (!checkData.exists) {
+        setError('Email tidak ditemukan dalam sistem kami.\n\nBelum punya akun? Klik "Daftar" untuk membuat akun baru.');
+        setLoading(false);
+        return;
+      }
+
+      // User exists, proceed with password reset
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        if (error.message.includes('rate limit')) {
+          setError('Terlalu banyak permintaan. Silakan tunggu beberapa menit dan coba lagi.');
         } else {
-          setError(error.message);
+          setError(error.message || 'Terjadi kesalahan. Silakan coba lagi.');
         }
       } else {
         setResetEmailSent(true);
         setForgotPasswordEmail('');
       }
-    } catch (err) {
-      setError('Terjadi kesalahan. Silakan coba lagi.');
+    } catch (err: any) {
+      console.error('Password reset error:', err);
+      if (err.message && (err.message.includes('fetch') || err.message.includes('Failed to fetch'))) {
+        setError('Gagal terhubung ke server. Periksa koneksi internet Anda.');
+      } else if (err.message && err.message.includes('verify email')) {
+        setError('Gagal memverifikasi email. Silakan coba lagi.');
+      } else {
+        setError('Terjadi kesalahan. Silakan coba lagi.');
+      }
     } finally {
       setLoading(false);
     }
@@ -413,7 +475,26 @@ export function AuthForm() {
 
                 {error && (
                   <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-                    {error}
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="whitespace-pre-line">{error}</p>
+                        {error.includes('Email tidak ditemukan') && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowForgotPassword(false);
+                              setError('');
+                              setForgotPasswordEmail('');
+                              setIsSignUp(true);
+                            }}
+                            className="mt-3 text-sm font-semibold px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors w-full"
+                          >
+                            Daftar Akun Baru
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
 
