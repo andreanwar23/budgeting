@@ -1,5 +1,18 @@
 # Complete Deployment Guide - BU Finance Tracker
 
+**Version**: 4.0.0
+**Last Updated**: December 8, 2025
+**Status**: Production Ready
+
+## IMPORTANT: Edge Functions Required
+
+This application now requires deploying 3 edge functions to Supabase. See [EDGE_FUNCTIONS_GUIDE.md](./EDGE_FUNCTIONS_GUIDE.md) for complete instructions.
+
+**Required Functions:**
+1. check-user-exists
+2. resend-verification
+3. send-reset
+
 ## Table of Contents
 
 1. [Prerequisites](#prerequisites)

@@ -12,7 +12,7 @@ interface RateLimitStore {
 
 const rateLimits: RateLimitStore = {}
 
-function checkRateLimit(identifier: string, maxRequests: number = 5, windowMs: number = 60000): boolean {
+function checkRateLimit(identifier: string, maxRequests: number = 3, windowMs: number = 300000): boolean {
   const now = Date.now()
   const limit = rateLimits[identifier]
 
@@ -57,21 +57,6 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const clientIp = req.headers.get("x-forwarded-for") || "unknown"
-
-    if (!checkRateLimit(clientIp, 10, 60000)) {
-      return new Response(
-        JSON.stringify({
-          error: "Rate limit exceeded",
-          message: "Too many requests. Please try again later."
-        }),
-        {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      )
-    }
-
     const body = await req.json()
     const { email } = body
 
@@ -97,6 +82,20 @@ Deno.serve(async (req: Request) => {
       )
     }
 
+    const rateLimitKey = `reset_${sanitizedEmail}`
+    if (!checkRateLimit(rateLimitKey, 3, 300000)) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "If an account with this email exists, you will receive a password reset link shortly."
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      )
+    }
+
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -108,45 +107,83 @@ Deno.serve(async (req: Request) => {
       }
     )
 
-    const { data, error } = await supabaseAdmin.auth.admin.listUsers()
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers()
 
-    if (error) {
-      console.error('Error fetching users:', error)
+    if (userError) {
+      console.error('Error fetching users:', userError)
       return new Response(
         JSON.stringify({
-          error: "Internal server error",
-          message: "Unable to process request"
+          success: true,
+          message: "If an account with this email exists, you will receive a password reset link shortly."
         }),
         {
-          status: 500,
+          status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       )
     }
 
-    const userExists = data.users.some(user =>
-      user.email?.toLowerCase() === sanitizedEmail
-    )
+    const user = userData.users.find(u => u.email?.toLowerCase() === sanitizedEmail)
+
+    if (!user) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "If an account with this email exists, you will receive a password reset link shortly."
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      )
+    }
+
+    if (!user.email_confirmed_at) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "If an account with this email exists, you will receive a password reset link shortly."
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      )
+    }
+
+    const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'recovery',
+      email: sanitizedEmail,
+      options: {
+        redirectTo: `${Deno.env.get('SITE_URL') || 'http://localhost:5173'}/reset-password`
+      }
+    })
+
+    if (resetError) {
+      console.error('Error sending reset link:', resetError)
+    }
 
     return new Response(
       JSON.stringify({
-        exists: userExists
+        success: true,
+        message: "If an account with this email exists, you will receive a password reset link shortly."
       }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     )
+
   } catch (error) {
     console.error('Unexpected error:', error)
 
     return new Response(
       JSON.stringify({
-        error: "Internal server error",
-        message: "An unexpected error occurred"
+        success: true,
+        message: "If an account with this email exists, you will receive a password reset link shortly."
       }),
       {
-        status: 500,
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     )
