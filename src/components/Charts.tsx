@@ -12,6 +12,7 @@ export function Charts() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [dateRange, setDateRange] = useState({
     startDate: '',
     endDate: ''
@@ -80,6 +81,7 @@ export function Charts() {
       setTransactions([]);
     } finally {
       setLoading(false);
+      setInitialLoadComplete(true);
     }
   };
 
@@ -210,13 +212,70 @@ export function Charts() {
     );
   }
 
-  // Show loading only when user exists and data is being fetched
-  if (loading && transactions.length === 0) {
+  // Show loading only during initial fetch or when refetching
+  if (loading && !initialLoadComplete) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-emerald-500 border-r-transparent mb-4"></div>
           <p className="text-slate-600 dark:text-slate-400">Memuat laporan...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state for new users with no transactions
+  if (initialLoadComplete && transactions.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Laporan & Analisis</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Visualisasi keuangan Anda</p>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 rounded-2xl border-2 border-dashed border-blue-200 dark:border-slate-600 p-12 text-center">
+          <div className="max-w-md mx-auto">
+            <div className="bg-blue-100 dark:bg-blue-900/30 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-3">
+              Belum Ada Transaksi
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
+              Laporan dan grafik akan muncul di sini setelah Anda menambahkan transaksi pertama.
+              Mulai catat pemasukan atau pengeluaran Anda sekarang!
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => window.location.hash = '#dashboard'}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Tambah Transaksi
+              </button>
+            </div>
+            <div className="mt-8 pt-8 border-t border-blue-200 dark:border-slate-600">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-3 font-medium">
+                �� Tips: Mulai dengan mencatat
+              </p>
+              <div className="grid grid-cols-2 gap-3 text-left">
+                <div className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-600">
+                  <div className="text-emerald-600 dark:text-emerald-400 font-semibold mb-1">Pemasukan</div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">Gaji, bonus, atau pendapatan lainnya</p>
+                </div>
+                <div className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-600">
+                  <div className="text-rose-600 dark:text-rose-400 font-semibold mb-1">Pengeluaran</div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">Belanja, tagihan, atau biaya lainnya</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
