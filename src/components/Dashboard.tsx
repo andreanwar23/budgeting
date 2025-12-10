@@ -19,11 +19,11 @@ import { QuickTransactionButton } from './QuickTransactionButton';
 
 export function Dashboard() {
   const { user } = useAuth();
-  const { t } = useSettings();
+  const { t, language } = useSettings(); // ⬅️ ambil language juga
 
   // === DATA STATE ===
-  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]); // semua transaksi mentah
-  const [transactions, setTransactions] = useState<Transaction[]>([]); // transaksi setelah filter
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,6 +38,9 @@ export function Dashboard() {
     startDate: '',
     endDate: ''
   });
+
+  // locale utk tanggal sesuai bahasa
+  const locale = language === 'en' ? 'en-US' : 'id-ID';
 
   // Load awal
   useEffect(() => {
@@ -86,7 +89,6 @@ export function Dashboard() {
 
     if (!error && data) {
       setAllTransactions(data as Transaction[]);
-      // filtering dilakukan di applyFilters()
     }
 
     setLoading(false);
@@ -145,7 +147,12 @@ export function Dashboard() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Yakin ingin menghapus transaksi ini?')) return;
+    const message =
+      language === 'en'
+        ? 'Are you sure you want to delete this transaction?'
+        : 'Yakin ingin menghapus transaksi ini?';
+
+    if (!confirm(message)) return;
 
     const { error } = await supabase.from('transactions').delete().eq('id', id);
 
@@ -156,7 +163,7 @@ export function Dashboard() {
 
   // ====== HELPER FORMAT PERIODE UNTUK KARTU HARI INI / FILTER ======
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('id-ID', {
+    return new Date(dateStr).toLocaleDateString(locale, {
       day: 'numeric',
       month: 'short',
       year: 'numeric'
@@ -168,21 +175,33 @@ export function Dashboard() {
 
     if (startDate && endDate) {
       if (startDate === endDate) {
-        return `Per ${formatDate(startDate)}`;
+        // Per / As of
+        return language === 'en'
+          ? `As of ${formatDate(startDate)}`
+          : `Per ${formatDate(startDate)}`;
       }
       return `${formatDate(startDate)} - ${formatDate(endDate)}`;
     }
 
-    if (startDate) return `Sejak ${formatDate(startDate)}`;
-    if (endDate) return `Sampai ${formatDate(endDate)}`;
+    if (startDate)
+      return language === 'en'
+        ? `Since ${formatDate(startDate)}`
+        : `Sejak ${formatDate(startDate)}`;
 
-    // default: hari ini (kalau filter kosong dan DateRangePicker belum set apa-apa)
+    if (endDate)
+      return language === 'en'
+        ? `Until ${formatDate(endDate)}`
+        : `Sampai ${formatDate(endDate)}`;
+
+    // default: hari ini
     const today = new Date();
-    return `Per ${today.toLocaleDateString('id-ID', {
+    const todayStr = today.toLocaleDateString(locale, {
       day: 'numeric',
       month: 'short',
       year: 'numeric'
-    })}`;
+    });
+
+    return language === 'en' ? `As of ${todayStr}` : `Per ${todayStr}`;
   };
 
   // ====== PERHITUNGAN STATISTIK ======
@@ -252,105 +271,146 @@ export function Dashboard() {
   const stats = calculateFilteredStats();
   const balance = stats.income - stats.expense;
 
+  const todaySubtitle = new Date().toLocaleDateString(locale, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+
   return (
-    <div className="space-y-6"
-      >
-        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mb-6 gap-3">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
-            <DateRangePicker onDateRangeChange={handleDateRangeChange} />
-            <CompactExportDropdown
-              transactions={transactions}
-              categories={categories}
-              stats={{ ...stats, balance }}
-              currentFilters={{
-                startDate: filters.startDate,
-                endDate: filters.endDate
-              }}
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          {/* Saldo Bulan Ini – Month-to-date */}
-          <StatsCard
-            title="Saldo Bulan Ini"
-            subtitle={`Per ${new Date().toLocaleDateString('id-ID', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric'
-            })}`}
-            description="Saldo bersih untuk bulan berjalan (pemasukan - pengeluaran). Data otomatis reset setiap tanggal 1."
-            amount={monthlyBalance}
-            icon={Wallet}
-            color="blue"
-            highlight={true}
-          />
-
-          {/* Saldo Keseluruhan – All-time */}
-          <StatsCard
-            title="Saldo Keseluruhan"
-            subtitle="All-Time Balance"
-            description="Total seluruh pemasukan dan pengeluaran sejak pertama kali menggunakan aplikasi. Tidak terpengaruh filter tanggal."
-            amount={overallBalance}
-            icon={Wallet}
-            color="purple"
-            highlight={false}
-          />
-
-          {/* Pemasukan – sesuai tanggal (default: hari ini / filter) */}
-          <StatsCard
-            title="Pemasukan"
-            subtitle={getFilterPeriodLabel()}
-            description="Total semua pemasukan sesuai tanggal yang dipilih (default: hari ini)."
-            amount={stats.income}
-            icon={TrendingUp}
-            color="green"
-            highlight={false}
-          />
-
-          {/* Pengeluaran – sesuai tanggal (default: hari ini / filter) */}
-          <StatsCard
-            title="Pengeluaran"
-            subtitle={getFilterPeriodLabel()}
-            description="Total semua pengeluaran sesuai tanggal yang dipilih (default: hari ini)."
-            amount={stats.expense}
-            icon={TrendingDown}
-            color="red"
-            highlight={false}
-          />
-        </div>
-
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 sm:p-6 mb-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-slate-800 dark:text-white">
-              {t('transactions')}
-            </h2>
-            <button
-              onClick={() => {
-                setEditingTransaction(null);
-                setShowForm(true);
-              }}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-medium hover:from-emerald-600 hover:to-teal-700 transition-all duration-200 shadow-sm hover:shadow-md active:scale-98"
-            >
-              <Plus className="w-5 h-5" />
-              <span>{t('addTransaction')}</span>
-            </button>
-          </div>
-
-          <FilterBar
-            filters={filters}
-            categories={categories}
-            onFilterChange={setFilters}
-          />
-
-          <TransactionList
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mb-6 gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <DateRangePicker onDateRangeChange={handleDateRangeChange} />
+          <CompactExportDropdown
             transactions={transactions}
             categories={categories}
-            loading={loading}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
+            stats={{ ...stats, balance }}
+            currentFilters={{
+              startDate: filters.startDate,
+              endDate: filters.endDate
+            }}
           />
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        {/* Saldo Bulan Ini – Month-to-date */}
+        <StatsCard
+          title={
+            language === 'en'
+              ? 'This Month Balance'
+              : 'Saldo Bulan Ini'
+          }
+          subtitle={
+            language === 'en'
+              ? `As of ${todaySubtitle}`
+              : `Per ${todaySubtitle}`
+          }
+          description={
+            language === 'en'
+              ? 'Net balance for the current month (income - expense). Automatically resets every 1st of the month.'
+              : 'Saldo bersih untuk bulan berjalan (pemasukan - pengeluaran). Data otomatis reset setiap tanggal 1.'
+          }
+          amount={monthlyBalance}
+          icon={Wallet}
+          color="blue"
+          highlight={true}
+        />
+
+        {/* Saldo Keseluruhan – All-time */}
+        <StatsCard
+          title={
+            language === 'en'
+              ? 'Overall Balance'
+              : 'Saldo Keseluruhan'
+          }
+          subtitle={
+            language === 'en'
+              ? 'All-time Balance'
+              : 'Saldo Sejak Awal'
+          }
+          description={
+            language === 'en'
+              ? 'Total income and expenses since you first used the app. Not affected by date filters.'
+              : 'Total seluruh pemasukan dan pengeluaran sejak pertama kali menggunakan aplikasi. Tidak terpengaruh filter tanggal.'
+          }
+          amount={overallBalance}
+          icon={Wallet}
+          color="purple"
+          highlight={false}
+        />
+
+        {/* Pemasukan – sesuai tanggal (default: hari ini / filter) */}
+        <StatsCard
+          title={
+            language === 'en'
+              ? 'Income'
+              : 'Pemasukan'
+          }
+          subtitle={getFilterPeriodLabel()}
+          description={
+            language === 'en'
+              ? 'Total income for the selected period (default: today).'
+              : 'Total semua pemasukan sesuai tanggal yang dipilih (default: hari ini).'
+          }
+          amount={stats.income}
+          icon={TrendingUp}
+          color="green"
+          highlight={false}
+        />
+
+        {/* Pengeluaran – sesuai tanggal (default: hari ini / filter) */}
+        <StatsCard
+          title={
+            language === 'en'
+              ? 'Expenses'
+              : 'Pengeluaran'
+          }
+          subtitle={getFilterPeriodLabel()}
+          description={
+            language === 'en'
+              ? 'Total expenses for the selected period (default: today).'
+              : 'Total semua pengeluaran sesuai tanggal yang dipilih (default: hari ini).'
+          }
+          amount={stats.expense}
+          icon={TrendingDown}
+          color="red"
+          highlight={false}
+        />
+      </div>
+
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 sm:p-6 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-slate-800 dark:text-white">
+            {t('transactions')}
+          </h2>
+          <button
+            onClick={() => {
+              setEditingTransaction(null);
+              setShowForm(true);
+            }}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-medium hover:from-emerald-600 hover:to-teal-700 transition-all duration-200 shadow-sm hover:shadow-md active:scale-98"
+          >
+            <Plus className="w-5 h-5" />
+            <span>{t('addTransaction')}</span>
+          </button>
+        </div>
+
+        <FilterBar
+          filters={filters}
+          categories={categories}
+          onFilterChange={setFilters}
+        />
+
+        <TransactionList
+          transactions={transactions}
+          categories={categories}
+          loading={loading}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      </div>
 
       {showForm && (
         <TransactionForm
