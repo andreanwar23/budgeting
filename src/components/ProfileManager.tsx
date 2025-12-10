@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { User, Camera, Save, X, Loader } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useSettings } from '../contexts/SettingsContext';
 
 interface UserProfile {
   id: string;
@@ -16,6 +17,8 @@ interface UserProfile {
 
 export function ProfileManager() {
   const { user } = useAuth();
+  const { language } = useSettings();
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -93,9 +96,17 @@ export function ProfileManager() {
       .eq('user_id', user.id);
 
     if (updateError) {
-      setError('Gagal menyimpan profil');
+      setError(
+        language === 'en'
+          ? 'Failed to save profile'
+          : 'Gagal menyimpan profil'
+      );
     } else {
-      setSuccess('Profil berhasil diperbarui');
+      setSuccess(
+        language === 'en'
+          ? 'Profile updated successfully'
+          : 'Profil berhasil diperbarui'
+      );
       loadProfile();
       setTimeout(() => setSuccess(''), 3000);
     }
@@ -109,13 +120,21 @@ export function ProfileManager() {
     const file = event.target.files[0];
 
     if (file.size > 2 * 1024 * 1024) {
-      setError('Ukuran file maksimal 2MB');
+      setError(
+        language === 'en'
+          ? 'Maximum file size is 2MB'
+          : 'Ukuran file maksimal 2MB'
+      );
       return;
     }
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      setError('Hanya file JPG, PNG, atau WEBP yang diperbolehkan');
+      setError(
+        language === 'en'
+          ? 'Only JPG, PNG, or WEBP files are allowed'
+          : 'Hanya file JPG, PNG, atau WEBP yang diperbolehkan'
+      );
       return;
     }
 
@@ -152,7 +171,11 @@ export function ProfileManager() {
 
       if (updateError) throw updateError;
 
-      setSuccess('Foto profil berhasil diperbarui');
+      setSuccess(
+        language === 'en'
+          ? 'Profile photo updated successfully'
+          : 'Foto profil berhasil diperbarui'
+      );
       loadProfile();
 
       // Trigger event to reload avatar in sidebar
@@ -160,7 +183,12 @@ export function ProfileManager() {
 
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
-      setError(err.message || 'Gagal mengunggah foto');
+      setError(
+        err?.message ||
+          (language === 'en'
+            ? 'Failed to upload photo'
+            : 'Gagal mengunggah foto')
+      );
     } finally {
       setUploading(false);
     }
@@ -171,7 +199,7 @@ export function ProfileManager() {
       return (
         <img
           src={profile.avatar_url}
-          alt="Avatar"
+          alt={language === 'en' ? 'Avatar' : 'Foto profil'}
           className="w-full h-full object-cover"
         />
       );
@@ -194,16 +222,23 @@ export function ProfileManager() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Profil Pengguna</h2>
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+          {language === 'en' ? 'User Profile' : 'Profil Pengguna'}
+        </h2>
         <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-          Kelola informasi profil dan foto Anda
+          {language === 'en'
+            ? 'Manage your profile information and photo'
+            : 'Kelola informasi profil dan foto Anda'}
         </p>
       </div>
 
       {error && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-xl text-sm flex items-center justify-between">
           <span>{error}</span>
-          <button onClick={() => setError('')} className="text-red-700 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">
+          <button
+            onClick={() => setError('')}
+            className="text-red-700 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -212,7 +247,10 @@ export function ProfileManager() {
       {success && (
         <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 px-4 py-3 rounded-xl text-sm flex items-center justify-between">
           <span>{success}</span>
-          <button onClick={() => setSuccess('')} className="text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300">
+          <button
+            onClick={() => setSuccess('')}
+            className="text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -244,8 +282,9 @@ export function ProfileManager() {
             </label>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-3 text-center">
-            Klik ikon kamera untuk mengganti foto<br />
-            Maksimal 2MB (JPG, PNG, WEBP)
+            {language === 'en'
+              ? 'Click the camera icon to change photo\nMax 2MB (JPG, PNG, WEBP)'
+              : 'Klik ikon kamera untuk mengganti foto\nMaksimal 2MB (JPG, PNG, WEBP)'}
           </p>
         </div>
 
@@ -261,32 +300,46 @@ export function ProfileManager() {
               className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed"
             />
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Email tidak dapat diubah
+              {language === 'en'
+                ? 'Email cannot be changed'
+                : 'Email tidak dapat diubah'}
             </p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Nama Lengkap
+              {language === 'en' ? 'Full Name' : 'Nama Lengkap'}
             </label>
             <input
               type="text"
               value={formData.full_name}
-              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-              placeholder="Masukkan nama lengkap Anda"
+              onChange={(e) =>
+                setFormData({ ...formData, full_name: e.target.value })
+              }
+              placeholder={
+                language === 'en'
+                  ? 'Enter your full name'
+                  : 'Masukkan nama lengkap Anda'
+              }
               className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-slate-700 dark:text-white"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Nomor Telepon
+              {language === 'en' ? 'Phone Number' : 'Nomor Telepon'}
             </label>
             <input
               type="tel"
               value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              placeholder="Contoh: 08123456789"
+              onChange={(e) =>
+                setFormData({ ...formData, phone: e.target.value })
+              }
+              placeholder={
+                language === 'en'
+                  ? 'Example: 08123456789'
+                  : 'Contoh: 08123456789'
+              }
               className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-slate-700 dark:text-white"
             />
           </div>
@@ -297,8 +350,14 @@ export function ProfileManager() {
             </label>
             <textarea
               value={formData.bio}
-              onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-              placeholder="Ceritakan tentang diri Anda..."
+              onChange={(e) =>
+                setFormData({ ...formData, bio: e.target.value })
+              }
+              placeholder={
+                language === 'en'
+                  ? 'Tell us about yourself...'
+                  : 'Ceritakan tentang diri Anda...'
+              }
               rows={4}
               className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-slate-700 dark:text-white resize-none"
             />
@@ -313,12 +372,12 @@ export function ProfileManager() {
             {saving ? (
               <>
                 <Loader className="w-5 h-5 animate-spin" />
-                Menyimpan...
+                {language === 'en' ? 'Saving...' : 'Menyimpan...'}
               </>
             ) : (
               <>
                 <Save className="w-5 h-5" />
-                Simpan Perubahan
+                {language === 'en' ? 'Save Changes' : 'Simpan Perubahan'}
               </>
             )}
           </button>
