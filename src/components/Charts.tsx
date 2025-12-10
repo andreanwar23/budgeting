@@ -1,14 +1,36 @@
 import { useState, useEffect, useMemo } from 'react';
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 import { supabase, Category, Transaction } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { TrendingUp, TrendingDown, PieChart as PieIcon, BarChart3 } from 'lucide-react';
+import { useSettings } from '../contexts/SettingsContext';
+import {
+  TrendingUp,
+  TrendingDown,
+  PieChart as PieIcon,
+  BarChart3
+} from 'lucide-react';
 import { DateRangePicker } from './DateRangePicker';
 import { CategoryDetailPanel } from './CategoryDetailPanel';
 import { CompactExportDropdown } from './CompactExportDropdown';
 
 export function Charts() {
   const { user } = useAuth();
+  const { language, currency } = useSettings();
+  const isEn = language === 'en';
+  const locale = isEn ? 'en-US' : 'id-ID';
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,9 +53,9 @@ export function Charts() {
       loadCategories();
       loadTransactions();
     } else {
-      // If no user, set loading to false immediately
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, dateRange]);
 
   const loadCategories = async () => {
@@ -56,10 +78,12 @@ export function Charts() {
       setLoading(true);
       let query = supabase
         .from('transactions')
-        .select(`
+        .select(
+          `
           *,
           category:categories(*)
-        `)
+        `
+        )
         .eq('user_id', user.id);
 
       if (dateRange.startDate && dateRange.endDate) {
@@ -68,7 +92,9 @@ export function Charts() {
           .lte('transaction_date', dateRange.endDate);
       }
 
-      const { data, error } = await query.order('transaction_date', { ascending: true });
+      const { data, error } = await query.order('transaction_date', {
+        ascending: true
+      });
 
       if (error) {
         console.error('Error loading transactions:', error);
@@ -86,11 +112,12 @@ export function Charts() {
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('id-ID', {
+    const fractionDigits = currency === 'USD' ? 2 : 0;
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      currency,
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits
     }).format(value);
   };
 
@@ -98,45 +125,62 @@ export function Charts() {
     const incomeByCategory: Record<string, number> = {};
     const expenseByCategory: Record<string, number> = {};
 
-    transactions.forEach(t => {
-      const categoryName = t.category?.name || 'Lainnya';
+    transactions.forEach((t) => {
+      const categoryName =
+        t.category?.name || (isEn ? 'Others' : 'Lainnya');
       if (t.type === 'income') {
-        incomeByCategory[categoryName] = (incomeByCategory[categoryName] || 0) + Number(t.amount);
+        incomeByCategory[categoryName] =
+          (incomeByCategory[categoryName] || 0) + Number(t.amount);
       } else {
-        expenseByCategory[categoryName] = (expenseByCategory[categoryName] || 0) + Number(t.amount);
+        expenseByCategory[categoryName] =
+          (expenseByCategory[categoryName] || 0) + Number(t.amount);
       }
     });
 
-    const incomeData = Object.entries(incomeByCategory).map(([name, value]) => ({
-      name,
-      value,
-      percentage: 0
-    }));
+    const incomeData = Object.entries(incomeByCategory).map(
+      ([name, value]) => ({
+        name,
+        value,
+        percentage: 0
+      })
+    );
 
-    const expenseData = Object.entries(expenseByCategory).map(([name, value]) => ({
-      name,
-      value,
-      percentage: 0
-    }));
+    const expenseData = Object.entries(expenseByCategory).map(
+      ([name, value]) => ({
+        name,
+        value,
+        percentage: 0
+      })
+    );
 
-    const totalIncome = incomeData.reduce((sum, item) => sum + item.value, 0);
-    const totalExpense = expenseData.reduce((sum, item) => sum + item.value, 0);
+    const totalIncome = incomeData.reduce(
+      (sum, item) => sum + item.value,
+      0
+    );
+    const totalExpense = expenseData.reduce(
+      (sum, item) => sum + item.value,
+      0
+    );
 
-    incomeData.forEach(item => {
+    incomeData.forEach((item) => {
       item.percentage = totalIncome > 0 ? (item.value / totalIncome) * 100 : 0;
     });
 
-    expenseData.forEach(item => {
-      item.percentage = totalExpense > 0 ? (item.value / totalExpense) * 100 : 0;
+    expenseData.forEach((item) => {
+      item.percentage =
+        totalExpense > 0 ? (item.value / totalExpense) * 100 : 0;
     });
 
     return { incomeData, expenseData, totalIncome, totalExpense };
-  }, [transactions]);
+  }, [transactions, isEn]);
 
   const dailyTrend = useMemo(() => {
-    const dailyData: Record<string, { income: number; expense: number; date: string }> = {};
+    const dailyData: Record<
+      string,
+      { income: number; expense: number; date: string }
+    > = {};
 
-    transactions.forEach(t => {
+    transactions.forEach((t) => {
       const date = t.transaction_date;
       if (!dailyData[date]) {
         dailyData[date] = { date, income: 0, expense: 0 };
@@ -148,37 +192,50 @@ export function Charts() {
       }
     });
 
-    return Object.values(dailyData).sort((a, b) => a.date.localeCompare(b.date));
+    return Object.values(dailyData).sort((a, b) =>
+      a.date.localeCompare(b.date)
+    );
   }, [transactions]);
 
-  const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+  const COLORS = [
+    '#10b981',
+    '#3b82f6',
+    '#f59e0b',
+    '#ef4444',
+    '#8b5cf6',
+    '#ec4899',
+    '#14b8a6',
+    '#f97316'
+  ];
 
-  // Handler untuk klik kategori di chart
-  // Fungsi ini akan dipanggil saat user klik pada bar/slice chart
-  const handleCategoryClick = (categoryName: string, type: 'income' | 'expense') => {
+  const handleCategoryClick = (
+    categoryName: string,
+    type: 'income' | 'expense'
+  ) => {
     try {
       if (!categoryName) {
         console.warn('Category name is empty');
         return;
       }
 
-      // Filter transaksi berdasarkan kategori dan date range aktif
-      const categoryTransactions = transactions.filter(t => {
+      const categoryTransactions = transactions.filter((t) => {
         const matchesCategory = t.category?.name === categoryName;
         const matchesType = t.type === type;
 
-        // Jika ada date filter, terapkan
         if (dateRange.startDate && dateRange.endDate) {
-          const matchesDate = t.transaction_date >= dateRange.startDate &&
-                             t.transaction_date <= dateRange.endDate;
+          const matchesDate =
+            t.transaction_date >= dateRange.startDate &&
+            t.transaction_date <= dateRange.endDate;
           return matchesCategory && matchesType && matchesDate;
         }
 
         return matchesCategory && matchesType;
       });
 
-      // Hitung total amount untuk kategori ini
-      const totalAmount = categoryTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+      const totalAmount = categoryTransactions.reduce(
+        (sum, t) => sum + Number(t.amount),
+        0
+      );
 
       if (categoryTransactions.length > 0) {
         setSelectedCategory({
@@ -188,90 +245,151 @@ export function Charts() {
           totalAmount
         });
       } else {
-        console.info(`No transactions found for category: ${categoryName}`);
+        console.info(
+          `No transactions found for category: ${categoryName}`
+        );
       }
     } catch (error) {
       console.error('Error handling category click:', error);
     }
   };
 
-  // Show message when not authenticated
+  // Not logged in
   if (!user) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center bg-white dark:bg-slate-800 p-8 rounded-xl border border-slate-200 dark:border-slate-700">
           <div className="text-slate-400 mb-4">
-            <svg className="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            <svg
+              className="w-20 h-20 mx-auto"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
             </svg>
           </div>
-          <p className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-2">Login Diperlukan</p>
-          <p className="text-sm text-slate-600 dark:text-slate-400">Silakan login terlebih dahulu untuk melihat laporan keuangan</p>
+          <p className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-2">
+            {isEn ? 'Login Required' : 'Login Diperlukan'}
+          </p>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            {isEn
+              ? 'Please log in to view your financial reports.'
+              : 'Silakan login terlebih dahulu untuk melihat laporan keuangan'}
+          </p>
         </div>
       </div>
     );
   }
 
-  // Show loading only during initial fetch or when refetching
+  // Initial loading
   if (loading && !initialLoadComplete) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-emerald-500 border-r-transparent mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-400">Memuat laporan...</p>
+          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-emerald-500 border-r-transparent mb-4" />
+          <p className="text-slate-600 dark:text-slate-400">
+            {isEn ? 'Loading report...' : 'Memuat laporan...'}
+          </p>
         </div>
       </div>
     );
   }
 
-  // Show empty state for new users with no transactions
+  // Empty state (no transactions yet)
   if (initialLoadComplete && transactions.length === 0) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Laporan & Analisis</h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Visualisasi keuangan Anda</p>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+              {isEn ? 'Reports & Analysis' : 'Laporan & Analisis'}
+            </h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+              {isEn
+                ? 'Visualize your finances'
+                : 'Visualisasi keuangan Anda'}
+            </p>
           </div>
         </div>
 
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 rounded-2xl border-2 border-dashed border-blue-200 dark:border-slate-600 p-12 text-center">
           <div className="max-w-md mx-auto">
             <div className="bg-blue-100 dark:bg-blue-900/30 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-10 h-10 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              <svg
+                className="w-10 h-10 text-blue-600 dark:text-blue-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
               </svg>
             </div>
             <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-3">
-              Belum Ada Transaksi
+              {isEn ? 'No Transactions Yet' : 'Belum Ada Transaksi'}
             </h3>
             <p className="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
-              Laporan dan grafik akan muncul di sini setelah Anda menambahkan transaksi pertama.
-              Mulai catat pemasukan atau pengeluaran Anda sekarang!
+              {isEn
+                ? 'Reports and charts will appear here after you add your first transaction. Start tracking your income or expenses now!'
+                : 'Laporan dan grafik akan muncul di sini setelah Anda menambahkan transaksi pertama. Mulai catat pemasukan atau pengeluaran Anda sekarang!'}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
-                onClick={() => window.location.hash = '#dashboard'}
+                onClick={() => (window.location.hash = '#dashboard')}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
                 </svg>
-                Tambah Transaksi
+                {isEn ? 'Add Transaction' : 'Tambah Transaksi'}
               </button>
             </div>
             <div className="mt-8 pt-8 border-t border-blue-200 dark:border-slate-600">
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-3 font-medium">
-                �� Tips: Mulai dengan mencatat
+                {isEn
+                  ? '💡 Tips: Start by recording'
+                  : '💡 Tips: Mulai dengan mencatat'}
               </p>
               <div className="grid grid-cols-2 gap-3 text-left">
                 <div className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-600">
-                  <div className="text-emerald-600 dark:text-emerald-400 font-semibold mb-1">Pemasukan</div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400">Gaji, bonus, atau pendapatan lainnya</p>
+                  <div className="text-emerald-600 dark:text-emerald-400 font-semibold mb-1">
+                    {isEn ? 'Income' : 'Pemasukan'}
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    {isEn
+                      ? 'Salary, bonus, or other income'
+                      : 'Gaji, bonus, atau pendapatan lainnya'}
+                  </p>
                 </div>
                 <div className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-600">
-                  <div className="text-rose-600 dark:text-rose-400 font-semibold mb-1">Pengeluaran</div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400">Belanja, tagihan, atau biaya lainnya</p>
+                  <div className="text-rose-600 dark:text-rose-400 font-semibold mb-1">
+                    {isEn ? 'Expenses' : 'Pengeluaran'}
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    {isEn
+                      ? 'Shopping, bills, or other costs'
+                      : 'Belanja, tagihan, atau biaya lainnya'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -281,26 +399,35 @@ export function Charts() {
     );
   }
 
+  // Main charts layout
   return (
     <div className="space-y-6">
+      {/* Header + filters */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Laporan & Analisis</h2>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Visualisasi keuangan Anda</p>
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+            {isEn ? 'Reports & Analysis' : 'Laporan & Analisis'}
+          </h2>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+            {isEn
+              ? 'Visualize your finances'
+              : 'Visualisasi keuangan Anda'}
+          </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          {/* Use same DateRangePicker as Dashboard */}
           <DateRangePicker
-            onDateRangeChange={(start, end) => setDateRange({ startDate: start, endDate: end })}
+            onDateRangeChange={(start, end) =>
+              setDateRange({ startDate: start, endDate: end })
+            }
           />
-          {/* Export with current date range */}
           <CompactExportDropdown
             transactions={transactions}
             categories={categories}
             stats={{
               income: categoryData.totalIncome,
               expense: categoryData.totalExpense,
-              balance: categoryData.totalIncome - categoryData.totalExpense
+              balance:
+                categoryData.totalIncome - categoryData.totalExpense
             }}
             currentFilters={{
               startDate: dateRange.startDate,
@@ -310,6 +437,7 @@ export function Charts() {
         </div>
       </div>
 
+      {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 p-6 rounded-xl border border-emerald-200 dark:border-emerald-800">
           <div className="flex items-center justify-between mb-2">
@@ -317,8 +445,12 @@ export function Charts() {
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
           </div>
-          <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">Total Pemasukan</p>
-          <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-300 mt-1">{formatCurrency(categoryData.totalIncome)}</p>
+          <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
+            {isEn ? 'Total Income' : 'Total Pemasukan'}
+          </p>
+          <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-300 mt-1">
+            {formatCurrency(categoryData.totalIncome)}
+          </p>
         </div>
 
         <div className="bg-gradient-to-br from-rose-50 to-rose-100 dark:from-rose-900/20 dark:to-rose-800/20 p-6 rounded-xl border border-rose-200 dark:border-rose-800">
@@ -327,8 +459,12 @@ export function Charts() {
               <TrendingDown className="w-6 h-6 text-white" />
             </div>
           </div>
-          <p className="text-sm text-rose-700 dark:text-rose-400 font-medium">Total Pengeluaran</p>
-          <p className="text-2xl font-bold text-rose-900 dark:text-rose-300 mt-1">{formatCurrency(categoryData.totalExpense)}</p>
+          <p className="text-sm text-rose-700 dark:text-rose-400 font-medium">
+            {isEn ? 'Total Expenses' : 'Total Pengeluaran'}
+          </p>
+          <p className="text-2xl font-bold text-rose-900 dark:text-rose-300 mt-1">
+            {formatCurrency(categoryData.totalExpense)}
+          </p>
         </div>
 
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-6 rounded-xl border border-blue-200 dark:border-blue-800">
@@ -337,9 +473,13 @@ export function Charts() {
               <BarChart3 className="w-6 h-6 text-white" />
             </div>
           </div>
-          <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">Saldo Bersih</p>
+          <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">
+            {isEn ? 'Net Balance' : 'Saldo Bersih'}
+          </p>
           <p className="text-2xl font-bold text-blue-900 dark:text-blue-300 mt-1">
-            {formatCurrency(categoryData.totalIncome - categoryData.totalExpense)}
+            {formatCurrency(
+              categoryData.totalIncome - categoryData.totalExpense
+            )}
           </p>
         </div>
 
@@ -349,24 +489,32 @@ export function Charts() {
               <PieIcon className="w-6 h-6 text-white" />
             </div>
           </div>
-          <p className="text-sm text-purple-700 dark:text-purple-400 font-medium">Transaksi</p>
-          <p className="text-2xl font-bold text-purple-900 dark:text-purple-300 mt-1">{transactions.length}</p>
+          <p className="text-sm text-purple-700 dark:text-purple-400 font-medium">
+            {isEn ? 'Transactions' : 'Transaksi'}
+          </p>
+          <p className="text-2xl font-bold text-purple-900 dark:text-purple-300 mt-1">
+            {transactions.length}
+          </p>
         </div>
       </div>
 
+      {/* Pie charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Income by category */}
         <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
               <PieIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              Pemasukan per Kategori
+              {isEn ? 'Income by Category' : 'Pemasukan per Kategori'}
             </h3>
             <span className="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
-              💡 Klik untuk detail
+              💡 {isEn ? 'Click for details' : 'Klik untuk detail'}
             </span>
           </div>
           {categoryData.incomeData.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 dark:text-slate-400">Belum ada data pemasukan</div>
+            <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+              {isEn ? 'No income data yet' : 'Belum ada data pemasukan'}
+            </div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -378,15 +526,24 @@ export function Charts() {
                   cy="50%"
                   outerRadius={100}
                   label={(entry) => {
-                    const item = categoryData.incomeData.find(d => d.name === entry.name);
-                    const percentage = item ? item.percentage : (entry.percent || 0) * 100;
+                    const item = categoryData.incomeData.find(
+                      (d) => d.name === entry.name
+                    );
+                    const percentage = item
+                      ? item.percentage
+                      : (entry.percent || 0) * 100;
                     return `${entry.name}: ${percentage.toFixed(1)}%`;
                   }}
-                  onClick={(data) => handleCategoryClick(data.name, 'income')}
+                  onClick={(data) =>
+                    handleCategoryClick(data.name, 'income')
+                  }
                   cursor="pointer"
                 >
                   {categoryData.incomeData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
                   ))}
                 </Pie>
                 <Tooltip
@@ -396,10 +553,20 @@ export function Charts() {
                       const data = payload[0].payload;
                       return (
                         <div className="bg-white dark:bg-slate-800 p-3 border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg">
-                          <p className="font-semibold text-slate-800 dark:text-slate-200">{data.name}</p>
-                          <p className="text-emerald-600 dark:text-emerald-400">{formatCurrency(data.value)}</p>
-                          <p className="text-sm text-slate-600 dark:text-slate-400">{data.percentage.toFixed(1)}%</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Klik untuk detail →</p>
+                          <p className="font-semibold text-slate-800 dark:text-slate-200">
+                            {data.name}
+                          </p>
+                          <p className="text-emerald-600 dark:text-emerald-400">
+                            {formatCurrency(data.value)}
+                          </p>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">
+                            {data.percentage.toFixed(1)}%
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            {isEn
+                              ? 'Click for details →'
+                              : 'Klik untuk detail →'}
+                          </p>
                         </div>
                       );
                     }
@@ -411,18 +578,21 @@ export function Charts() {
           )}
         </div>
 
+        {/* Expense by category */}
         <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
               <PieIcon className="w-5 h-5 text-rose-600 dark:text-rose-400" />
-              Pengeluaran per Kategori
+              {isEn ? 'Expenses by Category' : 'Pengeluaran per Kategori'}
             </h3>
             <span className="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
-              💡 Klik untuk detail
+              💡 {isEn ? 'Click for details' : 'Klik untuk detail'}
             </span>
           </div>
           {categoryData.expenseData.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 dark:text-slate-400">Belum ada data pengeluaran</div>
+            <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+              {isEn ? 'No expense data yet' : 'Belum ada data pengeluaran'}
+            </div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -434,15 +604,24 @@ export function Charts() {
                   cy="50%"
                   outerRadius={100}
                   label={(entry) => {
-                    const item = categoryData.expenseData.find(d => d.name === entry.name);
-                    const percentage = item ? item.percentage : (entry.percent || 0) * 100;
+                    const item = categoryData.expenseData.find(
+                      (d) => d.name === entry.name
+                    );
+                    const percentage = item
+                      ? item.percentage
+                      : (entry.percent || 0) * 100;
                     return `${entry.name}: ${percentage.toFixed(1)}%`;
                   }}
-                  onClick={(data) => handleCategoryClick(data.name, 'expense')}
+                  onClick={(data) =>
+                    handleCategoryClick(data.name, 'expense')
+                  }
                   cursor="pointer"
                 >
                   {categoryData.expenseData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
                   ))}
                 </Pie>
                 <Tooltip
@@ -452,10 +631,20 @@ export function Charts() {
                       const data = payload[0].payload;
                       return (
                         <div className="bg-white dark:bg-slate-800 p-3 border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg">
-                          <p className="font-semibold text-slate-800 dark:text-slate-200">{data.name}</p>
-                          <p className="text-rose-600 dark:text-rose-400">{formatCurrency(data.value)}</p>
-                          <p className="text-sm text-slate-600 dark:text-slate-400">{data.percentage.toFixed(1)}%</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Klik untuk detail →</p>
+                          <p className="font-semibold text-slate-800 dark:text-slate-200">
+                            {data.name}
+                          </p>
+                          <p className="text-rose-600 dark:text-rose-400">
+                            {formatCurrency(data.value)}
+                          </p>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">
+                            {data.percentage.toFixed(1)}%
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            {isEn
+                              ? 'Click for details →'
+                              : 'Klik untuk detail →'}
+                          </p>
                         </div>
                       );
                     }
@@ -468,47 +657,89 @@ export function Charts() {
         </div>
       </div>
 
+      {/* Daily trend */}
       <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
         <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
           <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-          Tren Harian
+          {isEn ? 'Daily Trend' : 'Tren Harian'}
         </h3>
         {dailyTrend.length === 0 ? (
-          <div className="text-center py-12 text-slate-500 dark:text-slate-400">Belum ada data transaksi</div>
+          <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+            {isEn
+              ? 'No transaction data yet'
+              : 'Belum ada data transaksi'}
+          </div>
         ) : (
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={dailyTrend}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="date"
-                tickFormatter={(value) => new Date(value).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })}
+                tickFormatter={(value) =>
+                  new Date(value).toLocaleDateString(locale, {
+                    day: '2-digit',
+                    month: 'short'
+                  })
+                }
               />
-              <YAxis tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} />
+              <YAxis
+                tickFormatter={(value) =>
+                  `${(value / 1000).toFixed(0)}k`
+                }
+              />
               <Tooltip
                 formatter={(value: number) => formatCurrency(value)}
-                labelFormatter={(label) => new Date(label).toLocaleDateString('id-ID')}
+                labelFormatter={(label) =>
+                  new Date(label).toLocaleDateString(locale)
+                }
               />
               <Legend />
-              <Bar dataKey="income" fill="#10b981" name="Pemasukan" />
-              <Bar dataKey="expense" fill="#ef4444" name="Pengeluaran" />
+              <Bar
+                dataKey="income"
+                fill="#10b981"
+                name={isEn ? 'Income' : 'Pemasukan'}
+              />
+              <Bar
+                dataKey="expense"
+                fill="#ef4444"
+                name={isEn ? 'Expenses' : 'Pengeluaran'}
+              />
             </BarChart>
           </ResponsiveContainer>
         )}
       </div>
 
+      {/* Top expense categories bar */}
       <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
         <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
           <BarChart3 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-          Perbandingan Kategori (Klik untuk detail)
+          {isEn
+            ? 'Category Comparison (Click for details)'
+            : 'Perbandingan Kategori (Klik untuk detail)'}
         </h3>
         {categoryData.expenseData.length === 0 ? (
-          <div className="text-center py-12 text-slate-500 dark:text-slate-400">Belum ada data untuk ditampilkan</div>
+          <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+            {isEn ? 'No data to display yet' : 'Belum ada data untuk ditampilkan'}
+          </div>
         ) : (
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={[...categoryData.expenseData].sort((a, b) => b.value - a.value).slice(0, 10)}>
+            <BarChart
+              data={[...categoryData.expenseData]
+                .sort((a, b) => b.value - a.value)
+                .slice(0, 10)}
+            >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-              <YAxis tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} />
+              <XAxis
+                dataKey="name"
+                angle={-45}
+                textAnchor="end"
+                height={100}
+              />
+              <YAxis
+                tickFormatter={(value) =>
+                  `${(value / 1000).toFixed(0)}k`
+                }
+              />
               <Tooltip
                 formatter={(value: number) => formatCurrency(value)}
                 content={({ active, payload }) => {
@@ -516,9 +747,17 @@ export function Charts() {
                     const data = payload[0].payload;
                     return (
                       <div className="bg-white dark:bg-slate-800 p-3 border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg">
-                        <p className="font-semibold text-slate-800 dark:text-slate-200">{data.name}</p>
-                        <p className="text-rose-600 dark:text-rose-400">{formatCurrency(data.value)}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Klik untuk detail →</p>
+                        <p className="font-semibold text-slate-800 dark:text-slate-200">
+                          {data.name}
+                        </p>
+                        <p className="text-rose-600 dark:text-rose-400">
+                          {formatCurrency(data.value)}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          {isEn
+                            ? 'Click for details →'
+                            : 'Klik untuk detail →'}
+                        </p>
                       </div>
                     );
                   }
@@ -528,8 +767,13 @@ export function Charts() {
               <Bar
                 dataKey="value"
                 fill="#8b5cf6"
-                name="Pengeluaran"
-                onClick={(data) => handleCategoryClick(data.name || 'Unknown', 'expense')}
+                name={isEn ? 'Expenses' : 'Pengeluaran'}
+                onClick={(data) =>
+                  handleCategoryClick(
+                    data.name || (isEn ? 'Unknown' : 'Tidak diketahui'),
+                    'expense'
+                  )
+                }
                 cursor="pointer"
                 style={{ touchAction: 'manipulation' }}
               />
@@ -538,7 +782,7 @@ export function Charts() {
         )}
       </div>
 
-      {/* Category Detail Panel - Modal that shows when user clicks on a chart */}
+      {/* Category Detail Panel */}
       {selectedCategory && (
         <CategoryDetailPanel
           categoryName={selectedCategory.name}
