@@ -2,20 +2,19 @@ import { useState, useEffect } from 'react';
 import {
   Settings as SettingsIcon,
   Globe,
-  DollarSign,
   Info,
   Sun,
   Moon,
   Check,
   User
 } from 'lucide-react';
-import { useSettings, Language, Currency } from '../contexts/SettingsContext';
+import { useSettings, Language } from '../contexts/SettingsContext';
 import { ProfileManager } from './ProfileManager';
 
 type SettingsProps = { openTab?: 'preferences' | 'profile' | string };
 
 export function Settings({ openTab }: SettingsProps) {
-  const { language, currency, theme, setLanguage, setCurrency, setTheme } = useSettings();
+  const { language, theme, setLanguage, setTheme } = useSettings();
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'preferences' | 'profile'>('preferences');
 
@@ -34,12 +33,6 @@ export function Settings({ openTab }: SettingsProps) {
     setSaving(false);
   };
 
-  const handleCurrencyChange = async (newCurrency: Currency) => {
-    setSaving(true);
-    await setCurrency(newCurrency);
-    setSaving(false);
-  };
-
   const handleThemeChange = async () => {
     setSaving(true);
     await setTheme(theme === 'light' ? 'dark' : 'light');
@@ -55,7 +48,9 @@ export function Settings({ openTab }: SettingsProps) {
             {language === 'en' ? 'Settings' : 'Pengaturan'}
           </h2>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            {language === 'en' ? 'Manage your app preferences and profile' : 'Kelola preferensi aplikasi dan profil Anda'}
+            {language === 'en'
+              ? 'Manage your app preferences and profile'
+              : 'Kelola preferensi aplikasi dan profil Anda'}
           </p>
         </div>
       </div>
@@ -106,7 +101,9 @@ export function Settings({ openTab }: SettingsProps) {
                   {language === 'en' ? 'Theme' : 'Tema'}
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                  {language === 'en' ? 'Choose between light and dark mode' : 'Pilih antara mode terang dan gelap'}
+                  {language === 'en'
+                    ? 'Choose between light and dark mode'
+                    : 'Pilih antara mode terang dan gelap'}
                 </p>
                 <div className="flex gap-3">
                   <button
@@ -152,7 +149,9 @@ export function Settings({ openTab }: SettingsProps) {
                   {language === 'en' ? 'Language' : 'Bahasa'}
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                  {language === 'en' ? 'Select your preferred language' : 'Pilih bahasa yang Anda inginkan'}
+                  {language === 'en'
+                    ? 'Select your preferred language'
+                    : 'Pilih bahasa yang Anda inginkan'}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <button
@@ -185,50 +184,6 @@ export function Settings({ openTab }: SettingsProps) {
             </div>
           </div>
 
-          {/* Currency Setting */}
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
-                <DollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">
-                  {language === 'en' ? 'Currency' : 'Mata Uang'}
-                </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                  {language === 'en' ? 'Choose your currency format' : 'Pilih format mata uang Anda'}
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => handleCurrencyChange('USD')}
-                    disabled={saving}
-                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
-                      currency === 'USD'
-                        ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md'
-                        : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                    }`}
-                  >
-                    <span>USD ($)</span>
-                    {currency === 'USD' && <Check className="w-5 h-5" />}
-                  </button>
-
-                  <button
-                    onClick={() => handleCurrencyChange('IDR')}
-                    disabled={saving}
-                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
-                      currency === 'IDR'
-                        ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md'
-                        : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                    }`}
-                  >
-                    <span>IDR (Rp)</span>
-                    {currency === 'IDR' && <Check className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* About Section */}
           <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
             <div className="flex items-start gap-4">
@@ -242,13 +197,15 @@ export function Settings({ openTab }: SettingsProps) {
                 <div className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
                   <div>
                     <p className="font-semibold text-slate-800 dark:text-white">
-                      {language === 'en' ? 'BU - Budgeting Uang' : 'BU - Budgeting Uang'}
+                      BU - Budgeting Uang
                     </p>
                     <p className="mt-1">
                       {language === 'en' ? 'Version 3.2.0' : 'Versi 3.2.0'}
                     </p>
                     <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
-                      {language === 'en' ? 'Last updated: December 10, 2025' : 'Terakhir diperbarui: 10 Desember 2025'}
+                      {language === 'en'
+                        ? 'Last updated: December 10, 2025'
+                        : 'Terakhir diperbarui: 10 Desember 2025'}
                     </p>
                   </div>
 
@@ -260,14 +217,41 @@ export function Settings({ openTab }: SettingsProps) {
 
                   <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-700">
                     <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 mb-1">
-                      {language === 'en' ? "✨ What's New in v3.2.0:" : '✨ Apa yang Baru di v3.2.0:'}
+                      {language === 'en'
+                        ? "✨ What's New in v3.2.0:"
+                        : '✨ Apa yang Baru di v3.2.0:'}
                     </p>
                     <ul className="text-xs space-y-0.5">
-                      <li>• {language === 'en' ? 'Complete English localization (100% coverage)' : 'Lokalisasi bahasa Inggris lengkap (cakupan 100%)'}</li>
-                      <li>• {language === 'en' ? 'Fixed currency input display issue (Rp 0 shadow)' : 'Perbaikan tampilan input mata uang (bayangan Rp 0)'}</li>
-                      <li>• {language === 'en' ? 'Improved dark mode support across all forms' : 'Dukungan mode gelap lebih baik di semua form'}</li>
-                      <li>• {language === 'en' ? 'Enhanced translation system with 70+ keys' : 'Sistem terjemahan ditingkatkan dengan 70+ kunci'}</li>
-                      <li>• {language === 'en' ? 'All UI elements now properly translated' : 'Semua elemen UI sekarang diterjemahkan dengan benar'}</li>
+                      <li>
+                        •{' '}
+                        {language === 'en'
+                          ? 'Complete English localization (100% coverage)'
+                          : 'Lokalisasi bahasa Inggris lengkap (cakupan 100%)'}
+                      </li>
+                      <li>
+                        •{' '}
+                        {language === 'en'
+                          ? 'Fixed currency input display issue (Rp 0 shadow)'
+                          : 'Perbaikan tampilan input mata uang (bayangan Rp 0)'}
+                      </li>
+                      <li>
+                        •{' '}
+                        {language === 'en'
+                          ? 'Improved dark mode support across all forms'
+                          : 'Dukungan mode gelap lebih baik di semua form'}
+                      </li>
+                      <li>
+                        •{' '}
+                        {language === 'en'
+                          ? 'Enhanced translation system with 70+ keys'
+                          : 'Sistem terjemahan ditingkatkan dengan 70+ kunci'}
+                      </li>
+                      <li>
+                        •{' '}
+                        {language === 'en'
+                          ? 'All UI elements now properly translated'
+                          : 'Semua elemen UI sekarang diterjemahkan dengan benar'}
+                      </li>
                     </ul>
                   </div>
 
@@ -276,16 +260,56 @@ export function Settings({ openTab }: SettingsProps) {
                       {language === 'en' ? 'Key Features:' : 'Fitur Utama:'}
                     </p>
                     <ul className="mt-2 space-y-1 list-disc list-inside">
-                      <li>{language === 'en' ? 'Income & expense tracking with detailed analytics' : 'Pelacakan pemasukan & pengeluaran dengan analitik detail'}</li>
-                      <li>{language === 'en' ? 'Custom category management (CRUD)' : 'Manajemen kategori kustom (CRUD)'}</li>
-                      <li>{language === 'en' ? 'Interactive charts & reports with clickable insights' : 'Grafik & laporan interaktif dengan insight yang dapat diklik'}</li>
-                      <li>{language === 'en' ? 'Enhanced loan tracking (Kasbon) with auto paid-date' : 'Sistem pelacakan kasbon dengan tanggal pelunasan otomatis'}</li>
-                      <li>{language === 'en' ? 'Advanced date filtering (default to current month)' : 'Filter tanggal lanjutan (default bulan ini)'}</li>
-                      <li>{language === 'en' ? 'Export to Excel/Image/APK' : 'Ekspor ke Excel/Gambar/APK'}</li>
-                      <li>{language === 'en' ? 'Multi-currency support (IDR/USD)' : 'Dukungan multi-mata uang (IDR/USD)'}</li>
-                      <li>{language === 'en' ? 'Dark mode & bilingual (EN/ID)' : 'Mode gelap & dwi bahasa (EN/ID)'}</li>
-                      <li>{language === 'en' ? 'Profile management with avatar upload' : 'Manajemen profil dengan upload avatar'}</li>
-                      <li>{language === 'en' ? 'Fully responsive & mobile-optimized' : 'Sepenuhnya responsif & dioptimalkan untuk mobile'}</li>
+                      <li>
+                        {language === 'en'
+                          ? 'Income & expense tracking with detailed analytics'
+                          : 'Pelacakan pemasukan & pengeluaran dengan analitik detail'}
+                      </li>
+                      <li>
+                        {language === 'en'
+                          ? 'Custom category management (CRUD)'
+                          : 'Manajemen kategori kustom (CRUD)'}
+                      </li>
+                      <li>
+                        {language === 'en'
+                          ? 'Interactive charts & reports with clickable insights'
+                          : 'Grafik & laporan interaktif dengan insight yang dapat diklik'}
+                      </li>
+                      <li>
+                        {language === 'en'
+                          ? 'Enhanced loan tracking (Kasbon) with auto paid-date'
+                          : 'Sistem pelacakan kasbon dengan tanggal pelunasan otomatis'}
+                      </li>
+                      <li>
+                        {language === 'en'
+                          ? 'Advanced date filtering (default to current month)'
+                          : 'Filter tanggal lanjutan (default bulan ini)'}
+                      </li>
+                      <li>
+                        {language === 'en'
+                          ? 'Export to Excel/Image/APK'
+                          : 'Ekspor ke Excel/Gambar/APK'}
+                      </li>
+                      <li>
+                        {language === 'en'
+                          ? 'Multi-currency support (IDR/USD)'
+                          : 'Dukungan multi-mata uang (IDR/USD)'}
+                      </li>
+                      <li>
+                        {language === 'en'
+                          ? 'Dark mode & bilingual (EN/ID)'
+                          : 'Mode gelap & dwi bahasa (EN/ID)'}
+                      </li>
+                      <li>
+                        {language === 'en'
+                          ? 'Profile management with avatar upload'
+                          : 'Manajemen profil dengan upload avatar'}
+                      </li>
+                      <li>
+                        {language === 'en'
+                          ? 'Fully responsive & mobile-optimized'
+                          : 'Sepenuhnya responsif & dioptimalkan untuk mobile'}
+                      </li>
                     </ul>
                   </div>
 
@@ -295,15 +319,15 @@ export function Settings({ openTab }: SettingsProps) {
                     </p>
                     <ul className="mt-2 space-y-1 text-xs">
                       <li className="flex items-center gap-2">
-                        <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                        <span className="w-2 h-2 bg-emerald-500 rounded-full" />
                         React 18 + TypeScript + Vite
                       </li>
                       <li className="flex items-center gap-2">
-                        <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                        <span className="w-2 h-2 bg-emerald-500 rounded-full" />
                         Supabase (Auth, Database, Storage)
                       </li>
                       <li className="flex items-center gap-2">
-                        <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                        <span className="w-2 h-2 bg-emerald-500 rounded-full" />
                         Tailwind CSS + Recharts
                       </li>
                     </ul>
