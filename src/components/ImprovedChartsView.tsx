@@ -2,7 +2,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useSettings } from '../contexts/SettingsContext';
-import { TrendingUp, TrendingDown, Wallet, BarChart3, Download, AlertTriangle } from 'lucide-react';
+import {
+  TrendingUp,
+  TrendingDown,
+  Wallet,
+  BarChart3,
+  Download,
+  AlertTriangle
+} from 'lucide-react';
 import { AdvancedDateFilter } from './AdvancedDateFilter';
 import { ImprovedHorizontalChart } from './ImprovedHorizontalChart';
 import { ErrorBoundary } from './ErrorBoundary';
@@ -24,17 +31,30 @@ interface Transaction {
 }
 
 const COLORS = [
-  '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899',
-  '#06b6d4', '#f97316', '#14b8a6', '#a855f7', '#6366f1', '#84cc16'
+  '#3b82f6',
+  '#10b981',
+  '#f59e0b',
+  '#ef4444',
+  '#8b5cf6',
+  '#ec4899',
+  '#06b6d4',
+  '#f97316',
+  '#14b8a6',
+  '#a855f7',
+  '#6366f1',
+  '#84cc16'
 ];
 
 export function ImprovedChartsView() {
   const { user } = useAuth();
-  const { theme } = useSettings();
+  const { theme, language, currency } = useSettings();
+  const isEn = language === 'en';
+  const locale = isEn ? 'en-US' : 'id-ID';
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({
     start: null,
-    end: null,
+    end: null
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +63,7 @@ export function ImprovedChartsView() {
     if (user) {
       loadTransactions();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, dateFilter]);
 
   const loadTransactions = async () => {
@@ -54,10 +75,12 @@ export function ImprovedChartsView() {
     try {
       let query = supabase
         .from('transactions')
-        .select(`
+        .select(
+          `
           *,
           category:categories(*)
-        `)
+        `
+        )
         .eq('user_id', user.id);
 
       if (dateFilter.start && dateFilter.end) {
@@ -66,18 +89,28 @@ export function ImprovedChartsView() {
           .lte('transaction_date', dateFilter.end);
       }
 
-      const { data, error } = await query.order('transaction_date', { ascending: false });
+      const { data, error } = await query.order('transaction_date', {
+        ascending: false
+      });
 
       if (error) {
         console.error('Error loading transactions:', error);
-        setError('Gagal memuat data transaksi. Silakan coba lagi.');
+        setError(
+          isEn
+            ? 'Failed to load transaction data. Please try again.'
+            : 'Gagal memuat data transaksi. Silakan coba lagi.'
+        );
         setTransactions([]);
       } else if (data) {
         setTransactions(data as Transaction[]);
       }
     } catch (err) {
       console.error('Unexpected error loading transactions:', err);
-      setError('Terjadi kesalahan tidak terduga. Silakan muat ulang halaman.');
+      setError(
+        isEn
+          ? 'An unexpected error occurred. Please reload the page.'
+          : 'Terjadi kesalahan tidak terduga. Silakan muat ulang halaman.'
+      );
       setTransactions([]);
     } finally {
       setLoading(false);
@@ -96,56 +129,67 @@ export function ImprovedChartsView() {
       transactions.forEach((t) => {
         if (!t || typeof t !== 'object') return;
 
-        const categoryName = t.category?.name || 'Lainnya';
+        const categoryName = t.category?.name || (isEn ? 'Others' : 'Lainnya');
         const amount = Number(t.amount);
 
         if (isNaN(amount)) return;
 
         if (t.type === 'income') {
-          incomeByCategory[categoryName] = (incomeByCategory[categoryName] || 0) + amount;
+          incomeByCategory[categoryName] =
+            (incomeByCategory[categoryName] || 0) + amount;
         } else if (t.type === 'expense') {
-          expenseByCategory[categoryName] = (expenseByCategory[categoryName] || 0) + amount;
+          expenseByCategory[categoryName] =
+            (expenseByCategory[categoryName] || 0) + amount;
         }
       });
 
-    const incomeData = Object.entries(incomeByCategory).map(([name, value], index) => ({
-      name,
-      value,
-      percentage: 0,
-      color: COLORS[index % COLORS.length],
-    }));
+      const incomeData = Object.entries(incomeByCategory).map(
+        ([name, value], index) => ({
+          name,
+          value,
+          percentage: 0,
+          color: COLORS[index % COLORS.length]
+        })
+      );
 
-    const expenseData = Object.entries(expenseByCategory).map(([name, value], index) => ({
-      name,
-      value,
-      percentage: 0,
-      color: COLORS[index % COLORS.length],
-    }));
+      const expenseData = Object.entries(expenseByCategory).map(
+        ([name, value], index) => ({
+          name,
+          value,
+          percentage: 0,
+          color: COLORS[index % COLORS.length]
+        })
+      );
 
-    const totalIncome = incomeData.reduce((sum, item) => sum + item.value, 0);
-    const totalExpense = expenseData.reduce((sum, item) => sum + item.value, 0);
+      const totalIncome = incomeData.reduce((sum, item) => sum + item.value, 0);
+      const totalExpense = expenseData.reduce(
+        (sum, item) => sum + item.value,
+        0
+      );
 
-    incomeData.forEach((item) => {
-      item.percentage = totalIncome > 0 ? (item.value / totalIncome) * 100 : 0;
-    });
+      incomeData.forEach((item) => {
+        item.percentage = totalIncome > 0 ? (item.value / totalIncome) * 100 : 0;
+      });
 
-    expenseData.forEach((item) => {
-      item.percentage = totalExpense > 0 ? (item.value / totalExpense) * 100 : 0;
-    });
+      expenseData.forEach((item) => {
+        item.percentage =
+          totalExpense > 0 ? (item.value / totalExpense) * 100 : 0;
+      });
 
       return { incomeData, expenseData, totalIncome, totalExpense };
     } catch (err) {
       console.error('Error processing chart data:', err);
       return { incomeData: [], expenseData: [], totalIncome: 0, totalExpense: 0 };
     }
-  }, [transactions]);
+  }, [transactions, isEn]);
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('id-ID', {
+    const fractionDigits = currency === 'USD' ? 2 : 0;
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      currency,
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits
     }).format(value);
   };
 
@@ -154,37 +198,55 @@ export function ImprovedChartsView() {
   };
 
   const handleExport = () => {
-    const formatCurrency = (value: number) => {
-      return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(value);
-    };
+    const summaryTitle = isEn ? 'REPORT SUMMARY' : 'RINGKASAN LAPORAN';
+    const transactionsTitle = isEn ? 'TRANSACTION DETAILS' : 'DETAIL TRANSAKSI';
 
     const summaryData = [
-      ['RINGKASAN LAPORAN'],
+      [summaryTitle],
       [''],
-      ['Total Pemasukan', formatCurrency(chartData.totalIncome)],
-      ['Total Pengeluaran', formatCurrency(chartData.totalExpense)],
-      ['Saldo Bersih', formatCurrency(chartData.totalIncome - chartData.totalExpense)],
-      ['Jumlah Transaksi', transactions.length],
+      [
+        isEn ? 'Total Income' : 'Total Pemasukan',
+        formatCurrency(chartData.totalIncome)
+      ],
+      [
+        isEn ? 'Total Expenses' : 'Total Pengeluaran',
+        formatCurrency(chartData.totalExpense)
+      ],
+      [
+        isEn ? 'Net Balance' : 'Saldo Bersih',
+        formatCurrency(chartData.totalIncome - chartData.totalExpense)
+      ],
+      [
+        isEn ? 'Number of Transactions' : 'Jumlah Transaksi',
+        transactions.length
+      ],
       [''],
       ['']
     ];
 
     const transactionData = [
-      ['DETAIL TRANSAKSI'],
+      [transactionsTitle],
       [''],
-      ['Tanggal', 'Tipe', 'Kategori', 'Judul', 'Jumlah']
+      [
+        isEn ? 'Date' : 'Tanggal',
+        isEn ? 'Type' : 'Tipe',
+        isEn ? 'Category' : 'Kategori',
+        isEn ? 'Title' : 'Judul',
+        isEn ? 'Amount' : 'Jumlah'
+      ]
     ];
 
     transactions.forEach((t) => {
       transactionData.push([
         t.transaction_date,
-        t.type === 'income' ? 'Pemasukan' : 'Pengeluaran',
-        t.category?.name || 'Lainnya',
+        t.type === 'income'
+          ? isEn
+            ? 'Income'
+            : 'Pemasukan'
+          : isEn
+          ? 'Expense'
+          : 'Pengeluaran',
+        t.category?.name || (isEn ? 'Others' : 'Lainnya'),
         t.title,
         formatCurrency(Number(t.amount))
       ]);
@@ -195,16 +257,23 @@ export function ImprovedChartsView() {
 
     ws['!cols'] = [
       { wch: 15 },
-      { wch: 15 },
-      { wch: 20 },
+      { wch: 18 },
+      { wch: 24 },
       { wch: 30 },
-      { wch: 20 }
+      { wch: 22 }
     ];
 
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Laporan');
+    XLSX.utils.book_append_sheet(
+      wb,
+      ws,
+      isEn ? 'Report' : 'Laporan'
+    );
 
-    const fileName = `Laporan_${dateFilter.start || 'Semua'}_${dateFilter.end || 'Data'}.xlsx`;
+    const fileNamePrefix = isEn ? 'Report' : 'Laporan';
+    const fileName = `${fileNamePrefix}_${
+      dateFilter.start || (isEn ? 'All' : 'Semua')
+    }_${dateFilter.end || (isEn ? 'Data' : 'Data')}.xlsx`;
     XLSX.writeFile(wb, fileName);
   };
 
@@ -214,10 +283,12 @@ export function ImprovedChartsView() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
-            Laporan & Analisis
+            {isEn ? 'Reports & Analysis' : 'Laporan & Analisis'}
           </h2>
           <p className="text-slate-600 dark:text-slate-400">
-            Visualisasi keuangan dengan filter periode fleksibel
+            {isEn
+              ? 'Visualize your finances with flexible period filters'
+              : 'Visualisasi keuangan dengan filter periode fleksibel'}
           </p>
         </div>
 
@@ -228,7 +299,7 @@ export function ImprovedChartsView() {
             className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 disabled:cursor-not-allowed"
           >
             <Download className="w-5 h-5" />
-            Export Excel
+            {isEn ? 'Export Excel' : 'Export Excel'}
           </button>
         </div>
       </div>
@@ -245,7 +316,9 @@ export function ImprovedChartsView() {
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
           </div>
-          <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">Total Pemasukan</p>
+          <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
+            {isEn ? 'Total Income' : 'Total Pemasukan'}
+          </p>
           <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-300 mt-1">
             {formatCurrency(chartData.totalIncome)}
           </p>
@@ -258,7 +331,9 @@ export function ImprovedChartsView() {
               <TrendingDown className="w-6 h-6 text-white" />
             </div>
           </div>
-          <p className="text-sm text-rose-700 dark:text-rose-400 font-medium">Total Pengeluaran</p>
+          <p className="text-sm text-rose-700 dark:text-rose-400 font-medium">
+            {isEn ? 'Total Expenses' : 'Total Pengeluaran'}
+          </p>
           <p className="text-2xl font-bold text-rose-900 dark:text-rose-300 mt-1">
             {formatCurrency(chartData.totalExpense)}
           </p>
@@ -271,7 +346,9 @@ export function ImprovedChartsView() {
               <Wallet className="w-6 h-6 text-white" />
             </div>
           </div>
-          <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">Saldo Bersih</p>
+          <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">
+            {isEn ? 'Net Balance' : 'Saldo Bersih'}
+          </p>
           <p className="text-2xl font-bold text-blue-900 dark:text-blue-300 mt-1">
             {formatCurrency(chartData.totalIncome - chartData.totalExpense)}
           </p>
@@ -284,8 +361,12 @@ export function ImprovedChartsView() {
               <BarChart3 className="w-6 h-6 text-white" />
             </div>
           </div>
-          <p className="text-sm text-purple-700 dark:text-purple-400 font-medium">Total Transaksi</p>
-          <p className="text-2xl font-bold text-purple-900 dark:text-purple-300 mt-1">{transactions.length}</p>
+          <p className="text-sm text-purple-700 dark:text-purple-400 font-medium">
+            {isEn ? 'Total Transactions' : 'Total Transaksi'}
+          </p>
+          <p className="text-2xl font-bold text-purple-900 dark:text-purple-300 mt-1">
+            {transactions.length}
+          </p>
         </div>
       </div>
 
@@ -296,9 +377,11 @@ export function ImprovedChartsView() {
             <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-1">
-                Terjadi Kesalahan
+                {isEn ? 'An Error Occurred' : 'Terjadi Kesalahan'}
               </h3>
-              <p className="text-red-700 dark:text-red-300 text-sm mb-3">{error}</p>
+              <p className="text-red-700 dark:text-red-300 text-sm mb-3">
+                {error}
+              </p>
               <button
                 onClick={() => {
                   setError(null);
@@ -306,7 +389,7 @@ export function ImprovedChartsView() {
                 }}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
               >
-                Coba Lagi
+                {isEn ? 'Try Again' : 'Coba Lagi'}
               </button>
             </div>
           </div>
@@ -316,7 +399,7 @@ export function ImprovedChartsView() {
       {/* Loading State */}
       {loading && !error && (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent" />
         </div>
       )}
 
@@ -329,10 +412,14 @@ export function ImprovedChartsView() {
                 <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0" />
                 <div>
                   <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-1">
-                    Grafik Tidak Dapat Dimuat
+                    {isEn
+                      ? 'Chart Could Not Be Loaded'
+                      : 'Grafik Tidak Dapat Dimuat'}
                   </h3>
                   <p className="text-red-700 dark:text-red-300 text-sm">
-                    Terjadi kesalahan saat menampilkan grafik. Silakan muat ulang halaman.
+                    {isEn
+                      ? 'An error occurred while displaying the chart. Please reload the page.'
+                      : 'Terjadi kesalahan saat menampilkan grafik. Silakan muat ulang halaman.'}
                   </p>
                 </div>
               </div>
@@ -353,10 +440,12 @@ export function ImprovedChartsView() {
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-12 text-center">
           <BarChart3 className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-2">
-            Belum Ada Data
+            {isEn ? 'No Data Yet' : 'Belum Ada Data'}
           </h3>
           <p className="text-slate-500 dark:text-slate-400">
-            Transaksi akan muncul di sini setelah Anda menambahkannya
+            {isEn
+              ? 'Transactions will appear here after you add them.'
+              : 'Transaksi akan muncul di sini setelah Anda menambahkannya.'}
           </p>
         </div>
       )}
