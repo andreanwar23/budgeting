@@ -245,10 +245,10 @@ export function Settings({ openTab }: SettingsProps) {
                       {language === 'en' ? 'BU - Budgeting Uang' : 'BU - Budgeting Uang'}
                     </p>
                     <p className="mt-1">
-                      {language === 'en' ? 'Version 3.1.0' : 'Versi 3.1.0'}
+                      {language === 'en' ? 'Version 3.2.0' : 'Versi 3.2.0'}
                     </p>
                     <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
-                      {language === 'en' ? 'Last updated: December 4, 2025' : 'Terakhir diperbarui: 4 Desember 2025'}
+                      {language === 'en' ? 'Last updated: December 10, 2025' : 'Terakhir diperbarui: 10 Desember 2025'}
                     </p>
                   </div>
 
@@ -260,14 +260,14 @@ export function Settings({ openTab }: SettingsProps) {
 
                   <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-700">
                     <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 mb-1">
-                      {language === 'en' ? "✨ What's New in v3.1.0:" : '✨ Apa yang Baru di v3.1.0:'}
+                      {language === 'en' ? "✨ What's New in v3.2.0:" : '✨ Apa yang Baru di v3.2.0:'}
                     </p>
                     <ul className="text-xs space-y-0.5">
-                      <li>• {language === 'en' ? 'Enhanced Kasbon: Automatic paid date tracking' : 'Kasbon Ditingkatkan: Pelacakan tanggal pelunasan otomatis'}</li>
-                      <li>• {language === 'en' ? 'Simplified Add Kasbon form (faster entry)' : 'Form Tambah Kasbon disederhanakan (entri lebih cepat)'}</li>
-                      <li>• {language === 'en' ? 'Fixed report category clicks & date filter' : 'Perbaikan klik kategori laporan & filter tanggal'}</li>
-                      <li>• {language === 'en' ? 'Default current month view in reports' : 'Tampilan bulan ini secara default di laporan'}</li>
-                      <li>• {language === 'en' ? 'APK build support (convert to mobile app)' : 'Dukungan build APK (konversi ke aplikasi mobile)'}</li>
+                      <li>• {language === 'en' ? 'Complete English localization (100% coverage)' : 'Lokalisasi bahasa Inggris lengkap (cakupan 100%)'}</li>
+                      <li>• {language === 'en' ? 'Fixed currency input display issue (Rp 0 shadow)' : 'Perbaikan tampilan input mata uang (bayangan Rp 0)'}</li>
+                      <li>• {language === 'en' ? 'Improved dark mode support across all forms' : 'Dukungan mode gelap lebih baik di semua form'}</li>
+                      <li>• {language === 'en' ? 'Enhanced translation system with 70+ keys' : 'Sistem terjemahan ditingkatkan dengan 70+ kunci'}</li>
+                      <li>• {language === 'en' ? 'All UI elements now properly translated' : 'Semua elemen UI sekarang diterjemahkan dengan benar'}</li>
                     </ul>
                   </div>
 

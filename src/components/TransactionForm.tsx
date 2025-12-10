@@ -19,7 +19,7 @@ export function TransactionForm({
   onCancel
 }: TransactionFormProps) {
   const { user } = useAuth();
-  const { currency } = useSettings();
+  const { currency, t } = useSettings();
   // MOBILE FIX: Always default to today's date when creating new transaction
   const todayDate = new Date().toISOString().split('T')[0];
   const [formData, setFormData] = useState({
@@ -74,7 +74,7 @@ export function TransactionForm({
 
       onSave();
     } catch (err: any) {
-      setError(err.message || 'Terjadi kesalahan');
+      setError(err.message || t('errorOccurred'));
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,7 @@ export function TransactionForm({
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex justify-between items-center rounded-t-2xl">
           <h2 className="text-xl font-bold text-slate-800 dark:text-white">
-            {transaction ? 'Edit Transaksi' : 'Tambah Transaksi'}
+            {transaction ? t('editTransaction') : t('addTransaction')}
           </h2>
           <button
             onClick={onCancel}
@@ -97,8 +97,8 @@ export function TransactionForm({
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Tipe Transaksi
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              {t('transactionType')}
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -107,10 +107,10 @@ export function TransactionForm({
                 className={`py-3 px-4 rounded-xl font-medium transition-all duration-200 ${
                   formData.type === 'income'
                     ? 'bg-emerald-500 text-white shadow-lg'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'
                 }`}
               >
-                Pemasukan
+                {t('income')}
               </button>
               <button
                 type="button"
@@ -118,17 +118,17 @@ export function TransactionForm({
                 className={`py-3 px-4 rounded-xl font-medium transition-all duration-200 ${
                   formData.type === 'expense'
                     ? 'bg-rose-500 text-white shadow-lg'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'
                 }`}
               >
-                Pengeluaran
+                {t('expense')}
               </button>
             </div>
           </div>
 
           <div>
             <label htmlFor="amount" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Jumlah ({currency === 'IDR' ? 'Rp' : '$'})
+              {t('amount')} ({currency === 'IDR' ? 'Rp' : '$'})
             </label>
             <CurrencyInput
               id="amount"
@@ -142,17 +142,17 @@ export function TransactionForm({
           </div>
 
           <div>
-            <label htmlFor="category" className="block text-sm font-medium text-slate-700 mb-2">
-              Kategori
+            <label htmlFor="category" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              {t('category')}
             </label>
             <select
               id="category"
               value={formData.category_id}
               onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
               required
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
+              className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 dark:bg-slate-700 dark:text-white"
             >
-              <option value="">Pilih Kategori</option>
+              <option value="">{t('category')}</option>
               {filteredCategories.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
@@ -162,8 +162,8 @@ export function TransactionForm({
           </div>
 
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-slate-700 mb-2">
-              Judul
+            <label htmlFor="title" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              {t('title')}
             </label>
             <input
               id="title"
@@ -171,28 +171,28 @@ export function TransactionForm({
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
-              placeholder="Contoh: Makan siang"
+              className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 dark:bg-slate-700 dark:text-white"
+              placeholder={t('titlePlaceholder')}
             />
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-slate-700 mb-2">
-              Deskripsi (Opsional)
+            <label htmlFor="description" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              {t('descriptionOptional')}
             </label>
             <textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 resize-none"
-              placeholder="Tambahkan catatan..."
+              className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 resize-none dark:bg-slate-700 dark:text-white"
+              placeholder={t('descriptionPlaceholder')}
             />
           </div>
 
           <div>
-            <label htmlFor="date" className="block text-sm font-medium text-slate-700 mb-2">
-              Tanggal
+            <label htmlFor="date" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              {t('date')}
             </label>
             <input
               id="date"
@@ -200,7 +200,7 @@ export function TransactionForm({
               value={formData.transaction_date}
               onChange={(e) => setFormData({ ...formData, transaction_date: e.target.value })}
               required
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
+              className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 dark:bg-slate-700 dark:text-white"
             />
           </div>
 
@@ -214,9 +214,9 @@ export function TransactionForm({
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 px-4 py-3 border border-slate-300 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors duration-200"
+              className="flex-1 px-4 py-3 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 rounded-xl font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors duration-200"
             >
-              Batal
+              {t('cancel')}
             </button>
             <button
               type="submit"
@@ -224,7 +224,7 @@ export function TransactionForm({
               className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-medium hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               <Save className="w-5 h-5" />
-              {loading ? 'Menyimpan...' : 'Simpan'}
+              {loading ? `${t('loading')}` : t('save')}
             </button>
           </div>
         </form>

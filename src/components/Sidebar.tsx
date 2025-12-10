@@ -191,9 +191,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
             >
               {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
               <span className="font-medium">
-                {theme === 'light'
-                  ? (t('language') === 'English' ? 'Dark Mode' : 'Mode Gelap')
-                  : (t('language') === 'English' ? 'Light Mode' : 'Mode Terang')}
+                {theme === 'light' ? t('darkMode') : t('lightMode')}
               </span>
             </button>
             <button

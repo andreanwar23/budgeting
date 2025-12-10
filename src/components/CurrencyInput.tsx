@@ -72,7 +72,7 @@ export function CurrencyInput({
    * Get currency symbol based on currency type
    */
   const getCurrencySymbol = (currencyType: Currency): string => {
-    return currencyType === 'IDR' ? 'RP' : '$';
+    return currencyType === 'IDR' ? 'Rp' : '$';
   };
 
   /**
@@ -192,28 +192,21 @@ export function CurrencyInput({
   };
 
   return (
-    <div className="relative">
-      <input
-        ref={inputRef}
-        id={id}
-        type="text"
-        inputMode="decimal"
-        value={displayValue}
-        onChange={handleChange}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyPress}
-        placeholder={placeholder}
-        required={required}
-        disabled={disabled}
-        className={className}
-        autoComplete="off"
-      />
-      {!isFocused && !displayValue && (
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-          {getCurrencySymbol(currency)} {placeholder}
-        </div>
-      )}
-    </div>
+    <input
+      ref={inputRef}
+      id={id}
+      type="text"
+      inputMode="decimal"
+      value={displayValue}
+      onChange={handleChange}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyPress}
+      placeholder={`${getCurrencySymbol(currency)} ${placeholder}`}
+      required={required}
+      disabled={disabled}
+      className={className}
+      autoComplete="off"
+    />
   );
 }
