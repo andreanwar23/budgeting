@@ -428,7 +428,7 @@ export function KasbonManager() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Nama Pemberi/Penerima *
+                  Nama Penerima *
                 </label>
                 <input
                   type="text"
