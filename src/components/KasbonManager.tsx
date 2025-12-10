@@ -29,13 +29,16 @@ interface KasbonFormData {
 
 export function KasbonManager() {
   const { user } = useAuth();
-  const { currency } = useSettings();
+  const { currency, language } = useSettings();
+  const isEn = language === 'en';
+  const locale = isEn ? 'en-US' : 'id-ID';
+
   const [kasbons, setKasbons] = useState<Kasbon[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'unpaid' | 'paid'>('all');
-  
+
   const [formData, setFormData] = useState<KasbonFormData>({
     name: '',
     amount: '',
@@ -77,12 +80,10 @@ export function KasbonManager() {
       notes: formData.notes || null
     };
 
-    // Handle paid_date logic based on status
+    // paid_date logic
     if (formData.status === 'paid') {
-      // If changing to paid and no paid_date exists, set current timestamp
       kasbonData.paid_date = new Date().toISOString();
     } else {
-      // If unpaid, clear the paid_date
       kasbonData.paid_date = null;
     }
 
@@ -98,9 +99,7 @@ export function KasbonManager() {
         loadKasbons();
       }
     } else {
-      const { error } = await supabase
-        .from('kasbon')
-        .insert([kasbonData]);
+      const { error } = await supabase.from('kasbon').insert([kasbonData]);
 
       if (!error) {
         resetForm();
@@ -122,7 +121,11 @@ export function KasbonManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Yakin ingin menghapus kasbon ini?')) return;
+    const message = isEn
+      ? 'Are you sure you want to delete this loan?'
+      : 'Yakin ingin menghapus kasbon ini?';
+
+    if (!confirm(message)) return;
 
     const { error } = await supabase
       .from('kasbon')
@@ -137,16 +140,13 @@ export function KasbonManager() {
   const handleStatusToggle = async (kasbon: Kasbon) => {
     const newStatus = kasbon.status === 'unpaid' ? 'paid' : 'unpaid';
 
-    // Prepare update data with paid_date logic
     const updateData: any = {
       status: newStatus
     };
 
-    // If marking as paid, set paid_date to current timestamp
     if (newStatus === 'paid') {
       updateData.paid_date = new Date().toISOString();
     } else {
-      // If marking as unpaid, clear the paid_date
       updateData.paid_date = null;
     }
 
@@ -173,7 +173,7 @@ export function KasbonManager() {
   };
 
   const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
+    return new Date(dateString).toLocaleDateString(locale, {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -183,35 +183,38 @@ export function KasbonManager() {
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('id-ID', {
+    const fractionDigits = currency === 'USD' ? 2 : 0;
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      currency,
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits
     }).format(value);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
+    return new Date(dateString).toLocaleDateString(locale, {
       day: 'numeric',
       month: 'short',
       year: 'numeric'
     });
   };
 
-  const filteredKasbons = kasbons.filter(kasbon => {
-    const matchesSearch = kasbon.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          kasbon.notes?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || kasbon.status === filterStatus;
+  const filteredKasbons = kasbons.filter((kasbon) => {
+    const matchesSearch =
+      kasbon.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      kasbon.notes?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter =
+      filterStatus === 'all' || kasbon.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
   const totalUnpaid = kasbons
-    .filter(k => k.status === 'unpaid')
+    .filter((k) => k.status === 'unpaid')
     .reduce((sum, k) => sum + Number(k.amount), 0);
 
   const totalPaid = kasbons
-    .filter(k => k.status === 'paid')
+    .filter((k) => k.status === 'paid')
     .reduce((sum, k) => sum + Number(k.amount), 0);
 
   return (
@@ -219,15 +222,21 @@ export function KasbonManager() {
       {/* Header & Summary */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Manajemen Kasbon</h2>
-          <p className="text-sm text-slate-600 mt-1">Kelola pinjaman dan pelunasan</p>
+          <h2 className="text-2xl font-bold text-slate-800">
+            {isEn ? 'Loan Management' : 'Manajemen Kasbon'}
+          </h2>
+          <p className="text-sm text-slate-600 mt-1">
+            {isEn
+              ? 'Manage your loans and repayments'
+              : 'Kelola pinjaman dan pelunasan'}
+          </p>
         </div>
         <button
           onClick={() => setShowForm(true)}
           className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
         >
           <Plus className="w-5 h-5" />
-          Tambah Kasbon
+          {isEn ? 'Add Loan' : 'Tambah Kasbon'}
         </button>
       </div>
 
@@ -239,9 +248,16 @@ export function KasbonManager() {
               <Clock className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-sm text-orange-700 font-medium">Belum Lunas</p>
-              <p className="text-xl font-bold text-orange-900">{formatCurrency(totalUnpaid)}</p>
-              <p className="text-xs text-orange-600">{kasbons.filter(k => k.status === 'unpaid').length} kasbon</p>
+              <p className="text-sm text-orange-700 font-medium">
+                {isEn ? 'Unpaid' : 'Belum Lunas'}
+              </p>
+              <p className="text-xl font-bold text-orange-900">
+                {formatCurrency(totalUnpaid)}
+              </p>
+              <p className="text-xs text-orange-600">
+                {kasbons.filter((k) => k.status === 'unpaid').length}{' '}
+                {isEn ? 'loans' : 'kasbon'}
+              </p>
             </div>
           </div>
         </div>
@@ -252,9 +268,16 @@ export function KasbonManager() {
               <Check className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-sm text-emerald-700 font-medium">Sudah Lunas</p>
-              <p className="text-xl font-bold text-emerald-900">{formatCurrency(totalPaid)}</p>
-              <p className="text-xs text-emerald-600">{kasbons.filter(k => k.status === 'paid').length} kasbon</p>
+              <p className="text-sm text-emerald-700 font-medium">
+                {isEn ? 'Paid' : 'Sudah Lunas'}
+              </p>
+              <p className="text-xl font-bold text-emerald-900">
+                {formatCurrency(totalPaid)}
+              </p>
+              <p className="text-xs text-emerald-600">
+                {kasbons.filter((k) => k.status === 'paid').length}{' '}
+                {isEn ? 'loans' : 'kasbon'}
+              </p>
             </div>
           </div>
         </div>
@@ -265,9 +288,15 @@ export function KasbonManager() {
               <Plus className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="text-sm text-blue-700 font-medium">Total Kasbon</p>
-              <p className="text-xl font-bold text-blue-900">{formatCurrency(totalUnpaid + totalPaid)}</p>
-              <p className="text-xs text-blue-600">{kasbons.length} kasbon</p>
+              <p className="text-sm text-blue-700 font-medium">
+                {isEn ? 'Total Loans' : 'Total Kasbon'}
+              </p>
+              <p className="text-xl font-bold text-blue-900">
+                {formatCurrency(totalUnpaid + totalPaid)}
+              </p>
+              <p className="text-xs text-blue-600">
+                {kasbons.length} {isEn ? 'loans' : 'kasbon'}
+              </p>
             </div>
           </div>
         </div>
@@ -279,7 +308,9 @@ export function KasbonManager() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
           <input
             type="text"
-            placeholder="Cari nama atau catatan..."
+            placeholder={
+              isEn ? 'Search name or notes...' : 'Cari nama atau catatan...'
+            }
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
@@ -294,7 +325,7 @@ export function KasbonManager() {
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            Semua
+            {isEn ? 'All' : 'Semua'}
           </button>
           <button
             onClick={() => setFilterStatus('unpaid')}
@@ -304,7 +335,7 @@ export function KasbonManager() {
                 : 'bg-orange-100 text-orange-600 hover:bg-orange-200'
             }`}
           >
-            Belum Lunas
+            {isEn ? 'Unpaid' : 'Belum Lunas'}
           </button>
           <button
             onClick={() => setFilterStatus('paid')}
@@ -314,7 +345,7 @@ export function KasbonManager() {
                 : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'
             }`}
           >
-            Lunas
+            {isEn ? 'Paid' : 'Lunas'}
           </button>
         </div>
       </div>
@@ -323,7 +354,9 @@ export function KasbonManager() {
       <div className="space-y-3">
         {filteredKasbons.length === 0 ? (
           <div className="text-center py-12 bg-slate-50 rounded-xl">
-            <p className="text-slate-500">Belum ada kasbon</p>
+            <p className="text-slate-500">
+              {isEn ? 'No loans yet' : 'Belum ada kasbon'}
+            </p>
           </div>
         ) : (
           filteredKasbons.map((kasbon) => (
@@ -338,7 +371,9 @@ export function KasbonManager() {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-semibold text-slate-800">{kasbon.name}</h3>
+                    <h3 className="text-lg font-semibold text-slate-800">
+                      {kasbon.name}
+                    </h3>
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${
                         kasbon.status === 'unpaid'
@@ -346,7 +381,13 @@ export function KasbonManager() {
                           : 'bg-emerald-100 text-emerald-700'
                       }`}
                     >
-                      {kasbon.status === 'unpaid' ? 'Belum Lunas' : 'Lunas'}
+                      {kasbon.status === 'unpaid'
+                        ? isEn
+                          ? 'Unpaid'
+                          : 'Belum Lunas'
+                        : isEn
+                        ? 'Paid'
+                        : 'Lunas'}
                     </span>
                   </div>
                   <p className="text-2xl font-bold text-slate-900 mb-2">
@@ -354,22 +395,30 @@ export function KasbonManager() {
                   </p>
                   <div className="space-y-1">
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
-                      <span>Tanggal: {formatDate(kasbon.loan_date)}</span>
+                      <span>
+                        {isEn ? 'Date' : 'Tanggal'}: {formatDate(kasbon.loan_date)}
+                      </span>
                       {kasbon.due_date && (
-                        <span>Jatuh Tempo: {formatDate(kasbon.due_date)}</span>
+                        <span>
+                          {isEn ? 'Due Date' : 'Jatuh Tempo'}:{' '}
+                          {formatDate(kasbon.due_date)}
+                        </span>
                       )}
                     </div>
                     {kasbon.paid_date && kasbon.status === 'paid' && (
                       <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 border border-emerald-300 rounded-lg">
                         <Check className="w-4 h-4 text-emerald-700" />
                         <span className="text-sm text-emerald-700 font-semibold">
-                          Lunas pada: {formatDateTime(kasbon.paid_date)}
+                          {isEn ? 'Paid on' : 'Lunas pada'}:{' '}
+                          {formatDateTime(kasbon.paid_date)}
                         </span>
                       </div>
                     )}
                   </div>
                   {kasbon.notes && (
-                    <p className="text-sm text-slate-600 mt-2 italic">{kasbon.notes}</p>
+                    <p className="text-sm text-slate-600 mt-2 italic">
+                      {kasbon.notes}
+                    </p>
                   )}
                 </div>
                 <div className="flex gap-2">
@@ -380,7 +429,15 @@ export function KasbonManager() {
                         ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
                         : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
                     }`}
-                    title={kasbon.status === 'unpaid' ? 'Tandai Lunas' : 'Tandai Belum Lunas'}
+                    title={
+                      kasbon.status === 'unpaid'
+                        ? isEn
+                          ? 'Mark as paid'
+                          : 'Tandai lunas'
+                        : isEn
+                        ? 'Mark as unpaid'
+                        : 'Tandai belum lunas'
+                    }
                   >
                     {kasbon.status === 'unpaid' ? (
                       <Check className="w-5 h-5" />
@@ -391,14 +448,14 @@ export function KasbonManager() {
                   <button
                     onClick={() => handleEdit(kasbon)}
                     className="p-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
-                    title="Edit"
+                    title={isEn ? 'Edit' : 'Edit'}
                   >
                     <Pencil className="w-5 h-5" />
                   </button>
                   <button
                     onClick={() => handleDelete(kasbon.id)}
                     className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
-                    title="Hapus"
+                    title={isEn ? 'Delete' : 'Hapus'}
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
@@ -415,7 +472,13 @@ export function KasbonManager() {
           <div className="bg-white rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-slate-800">
-                {editingId ? 'Edit Kasbon' : 'Tambah Kasbon'}
+                {editingId
+                  ? isEn
+                    ? 'Edit Loan'
+                    : 'Edit Kasbon'
+                  : isEn
+                  ? 'Add Loan'
+                  : 'Tambah Kasbon'}
               </h3>
               <button
                 onClick={resetForm}
@@ -428,25 +491,31 @@ export function KasbonManager() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Nama Penerima *
+                  {isEn ? 'Recipient Name *' : 'Nama Penerima *'}
                 </label>
                 <input
                   type="text"
                   required
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  placeholder="Contoh: Budi"
+                  placeholder={
+                    isEn ? 'Example: John' : 'Contoh: Budi'
+                  }
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Nominal ({currency === 'IDR' ? 'Rp' : '$'}) *
+                  {isEn ? 'Amount' : 'Nominal'} ({currency === 'IDR' ? 'Rp' : '$'}) *
                 </label>
                 <CurrencyInput
                   value={formData.amount}
-                  onChange={(value) => setFormData({ ...formData, amount: value })}
+                  onChange={(value) =>
+                    setFormData({ ...formData, amount: value })
+                  }
                   required
                   min="0"
                   className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-slate-700 dark:text-white"
@@ -456,13 +525,15 @@ export function KasbonManager() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Tanggal Kasbon *
+                  {isEn ? 'Loan Date *' : 'Tanggal Kasbon *'}
                 </label>
                 <input
                   type="date"
                   required
                   value={formData.loan_date}
-                  onChange={(e) => setFormData({ ...formData, loan_date: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, loan_date: e.target.value })
+                  }
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 />
               </div>
@@ -471,32 +542,47 @@ export function KasbonManager() {
               {editingId && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Status *
+                    {isEn ? 'Status *' : 'Status *'}
                   </label>
                   <select
                     value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value as 'unpaid' | 'paid' })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        status: e.target.value as 'unpaid' | 'paid'
+                      })
+                    }
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   >
-                    <option value="unpaid">Belum Lunas</option>
-                    <option value="paid">Lunas</option>
+                    <option value="unpaid">
+                      {isEn ? 'Unpaid' : 'Belum Lunas'}
+                    </option>
+                    <option value="paid">
+                      {isEn ? 'Paid' : 'Lunas'}
+                    </option>
                   </select>
                   <p className="text-xs text-slate-500 mt-1">
-                    Mengubah status ke "Lunas" akan mencatat waktu pelunasan
+                    {isEn
+                      ? 'Changing status to "Paid" will record the repayment time'
+                      : 'Mengubah status ke "Lunas" akan mencatat waktu pelunasan'}
                   </p>
                 </div>
               )}
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Catatan (Opsional)
+                  {isEn ? 'Notes (Optional)' : 'Catatan (Opsional)'}
                 </label>
                 <textarea
                   value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, notes: e.target.value })
+                  }
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   rows={3}
-                  placeholder="Catatan tambahan..."
+                  placeholder={
+                    isEn ? 'Additional notes...' : 'Catatan tambahan...'
+                  }
                 />
               </div>
 
@@ -506,13 +592,19 @@ export function KasbonManager() {
                   onClick={resetForm}
                   className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
                 >
-                  Batal
+                  {isEn ? 'Cancel' : 'Batal'}
                 </button>
                 <button
                   type="submit"
                   className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
                 >
-                  {editingId ? 'Update' : 'Simpan'}
+                  {editingId
+                    ? isEn
+                      ? 'Update'
+                      : 'Update'
+                    : isEn
+                    ? 'Save'
+                    : 'Simpan'}
                 </button>
               </div>
             </form>
