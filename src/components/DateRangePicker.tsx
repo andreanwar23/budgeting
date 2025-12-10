@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Calendar, ChevronDown } from 'lucide-react';
 import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns';
-import { id as localeId } from 'date-fns/locale';
+import { id as localeId, enUS as localeEn } from 'date-fns/locale';
+import { useSettings } from '../contexts/SettingsContext';
 
 interface DateRangePickerProps {
   onDateRangeChange: (startDate: string, endDate: string) => void;
 }
 
 export function DateRangePicker({ onDateRangeChange }: DateRangePickerProps) {
+  const { language } = useSettings();
+  const isEn = language === 'en';
+  const locale = isEn ? localeEn : localeId;
+
   const [showDropdown, setShowDropdown] = useState(false);
   const [customRange, setCustomRange] = useState(false);
   const thisMonthStart = format(startOfMonth(new Date()), 'yyyy-MM-dd');
@@ -25,20 +30,39 @@ export function DateRangePicker({ onDateRangeChange }: DateRangePickerProps) {
   }, [initialized, thisMonthStart, thisMonthEnd, onDateRangeChange]);
 
   const presets = [
-    { id: 'today', label: 'Hari Ini', icon: '📅' },
-    { id: 'all', label: 'Semua Data', icon: '📊' },
-    { id: 'this-month', label: 'Bulan Ini', icon: '📆' },
-    { id: 'last-month', label: 'Bulan Lalu', icon: '📋' },
-    { id: 'last-3-months', label: '3 Bulan Terakhir', icon: '📈' },
-    { id: 'custom', label: 'Pilih Tanggal', icon: '🗓️' }
+    { id: 'today', icon: '📅' },
+    { id: 'all', icon: '📊' },
+    { id: 'this-month', icon: '📆' },
+    { id: 'last-month', icon: '📋' },
+    { id: 'last-3-months', icon: '📈' },
+    { id: 'custom', icon: '🗓️' }
   ];
+
+  const getPresetLabel = (id: string) => {
+    switch (id) {
+      case 'today':
+        return isEn ? 'Today' : 'Hari Ini';
+      case 'all':
+        return isEn ? 'All Data' : 'Semua Data';
+      case 'this-month':
+        return isEn ? 'This Month' : 'Bulan Ini';
+      case 'last-month':
+        return isEn ? 'Last Month' : 'Bulan Lalu';
+      case 'last-3-months':
+        return isEn ? 'Last 3 Months' : '3 Bulan Terakhir';
+      case 'custom':
+        return isEn ? 'Choose Dates' : 'Pilih Tanggal';
+      default:
+        return id;
+    }
+  };
 
   const handlePresetSelect = (presetId: string) => {
     setSelectedPreset(presetId);
     const todayDate = new Date();
 
     switch (presetId) {
-      case 'today':
+      case 'today': {
         const todayStr = format(todayDate, 'yyyy-MM-dd');
         setStartDate(todayStr);
         setEndDate(todayStr);
@@ -48,16 +72,18 @@ export function DateRangePicker({ onDateRangeChange }: DateRangePickerProps) {
           onDateRangeChange(todayStr, todayStr);
         }, 0);
         break;
+      }
 
-      case 'all':
+      case 'all': {
         setCustomRange(false);
         setShowDropdown(false);
         setTimeout(() => {
           onDateRangeChange('', '');
         }, 0);
         break;
+      }
 
-      case 'this-month':
+      case 'this-month': {
         const monthStart = format(startOfMonth(todayDate), 'yyyy-MM-dd');
         const monthEnd = format(endOfMonth(todayDate), 'yyyy-MM-dd');
         setStartDate(monthStart);
@@ -68,8 +94,9 @@ export function DateRangePicker({ onDateRangeChange }: DateRangePickerProps) {
           onDateRangeChange(monthStart, monthEnd);
         }, 0);
         break;
+      }
 
-      case 'last-month':
+      case 'last-month': {
         const lastMonth = subMonths(todayDate, 1);
         const lastMonthStart = format(startOfMonth(lastMonth), 'yyyy-MM-dd');
         const lastMonthEnd = format(endOfMonth(lastMonth), 'yyyy-MM-dd');
@@ -81,8 +108,9 @@ export function DateRangePicker({ onDateRangeChange }: DateRangePickerProps) {
           onDateRangeChange(lastMonthStart, lastMonthEnd);
         }, 0);
         break;
+      }
 
-      case 'last-3-months':
+      case 'last-3-months': {
         const threeMonthsAgo = subMonths(todayDate, 3);
         const threeMonthStart = format(startOfMonth(threeMonthsAgo), 'yyyy-MM-dd');
         const todayEnd = format(endOfMonth(todayDate), 'yyyy-MM-dd');
@@ -94,6 +122,7 @@ export function DateRangePicker({ onDateRangeChange }: DateRangePickerProps) {
           onDateRangeChange(threeMonthStart, todayEnd);
         }, 0);
         break;
+      }
 
       case 'custom':
         setCustomRange(true);
@@ -110,18 +139,26 @@ export function DateRangePicker({ onDateRangeChange }: DateRangePickerProps) {
 
   const getDisplayText = () => {
     const preset = presets.find(p => p.id === selectedPreset);
+
     if (selectedPreset === 'custom' && startDate && endDate) {
       const start = format(new Date(startDate), 'dd/MM/yyyy');
       const end = format(new Date(endDate), 'dd/MM/yyyy');
       return start === end ? start : `${start} - ${end}`;
     }
+
     if (selectedPreset === 'today' && startDate) {
-      return `Hari Ini (${format(new Date(startDate), 'dd/MM/yyyy')})`;
+      const dateStr = format(new Date(startDate), 'dd/MM/yyyy');
+      return `${getPresetLabel('today')} (${dateStr})`;
     }
+
     if (selectedPreset === 'this-month') {
-      return `Bulan Ini (${format(new Date(), 'MMMM yyyy', { locale: localeId })})`;
+      const monthYear = format(new Date(), 'MMMM yyyy', { locale });
+      return `${getPresetLabel('this-month')} (${monthYear})`;
     }
-    return preset?.label || 'Pilih Rentang Tanggal';
+
+    if (preset) return getPresetLabel(preset.id);
+
+    return isEn ? 'Select Date Range' : 'Pilih Rentang Tanggal';
   };
 
   return (
@@ -132,7 +169,9 @@ export function DateRangePicker({ onDateRangeChange }: DateRangePickerProps) {
       >
         <div className="flex items-center gap-2">
           <Calendar className="w-5 h-5 text-emerald-600 flex-shrink-0 group-hover:scale-110 transition-transform" />
-          <span className="text-sm font-semibold text-slate-700 truncate">{getDisplayText()}</span>
+          <span className="text-sm font-semibold text-slate-700 truncate">
+            {getDisplayText()}
+          </span>
         </div>
         <ChevronDown className="w-4 h-4 text-emerald-600 flex-shrink-0 group-hover:translate-y-0.5 transition-transform" />
       </button>
@@ -145,7 +184,9 @@ export function DateRangePicker({ onDateRangeChange }: DateRangePickerProps) {
           />
           <div className="absolute left-0 sm:right-0 mt-2 w-full sm:w-80 bg-white rounded-xl shadow-2xl border-2 border-slate-200 z-20 overflow-hidden">
             <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-4 py-3 border-b border-emerald-100">
-              <p className="text-sm font-semibold text-slate-700">Pilih Periode</p>
+              <p className="text-sm font-semibold text-slate-700">
+                {isEn ? 'Select Period' : 'Pilih Periode'}
+              </p>
             </div>
             <div className="p-3 space-y-1">
               {presets.map((preset) => (
@@ -159,7 +200,7 @@ export function DateRangePicker({ onDateRangeChange }: DateRangePickerProps) {
                   }`}
                 >
                   <span className="text-lg">{preset.icon}</span>
-                  <span className="text-sm">{preset.label}</span>
+                  <span className="text-sm">{getPresetLabel(preset.id)}</span>
                   {selectedPreset === preset.id && (
                     <span className="ml-auto text-xs">✓</span>
                   )}
@@ -171,7 +212,7 @@ export function DateRangePicker({ onDateRangeChange }: DateRangePickerProps) {
               <div className="border-t border-slate-200 p-4 space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Dari Tanggal
+                    {isEn ? 'From Date' : 'Dari Tanggal'}
                   </label>
                   <input
                     type="date"
@@ -182,7 +223,7 @@ export function DateRangePicker({ onDateRangeChange }: DateRangePickerProps) {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Sampai Tanggal
+                    {isEn ? 'To Date' : 'Sampai Tanggal'}
                   </label>
                   <input
                     type="date"
@@ -197,7 +238,7 @@ export function DateRangePicker({ onDateRangeChange }: DateRangePickerProps) {
                   disabled={!startDate || !endDate}
                   className="w-full px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg font-medium hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                 >
-                  Terapkan
+                  {isEn ? 'Apply' : 'Terapkan'}
                 </button>
               </div>
             )}
