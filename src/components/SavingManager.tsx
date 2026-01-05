@@ -48,13 +48,14 @@ type ViewMode = 'list' | 'add-goal' | 'edit-goal' | 'goal-detail';
 
 export function SavingManager() {
   const { user } = useAuth();
-  const { currency, formatCurrency, t } = useSettings();
+  const { currency, formatCurrency, t, language } = useSettings();
 
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedGoal, setSelectedGoal] = useState<SavingsGoal | null>(null);
   const [transactions, setTransactions] = useState<SavingsTransaction[]>([]);
   const [showTransactionForm, setShowTransactionForm] = useState<'deposit' | 'withdraw' | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [goalFormData, setGoalFormData] = useState<GoalFormData>({
     name: '',
@@ -143,7 +144,7 @@ export function SavingManager() {
 
   const handleTransactionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !selectedGoal || !showTransactionForm) return;
+    if (!user || !selectedGoal || !showTransactionForm || isSubmitting) return;
 
     const amount = parseFloat(transactionFormData.amount);
 
@@ -157,30 +158,50 @@ export function SavingManager() {
       return;
     }
 
-    const transactionData = {
-      goal_id: selectedGoal.id,
-      user_id: user.id,
-      type: showTransactionForm,
-      amount: amount,
-      date: transactionFormData.date,
-      note: transactionFormData.note || null
-    };
+    setIsSubmitting(true);
 
-    const { error } = await supabase
-      .from('savings_transactions')
-      .insert([transactionData]);
+    try {
+      const transactionData = {
+        goal_id: selectedGoal.id,
+        user_id: user.id,
+        type: showTransactionForm,
+        amount: amount,
+        date: transactionFormData.date,
+        note: transactionFormData.note || null
+      };
 
-    if (!error) {
-      await loadGoals();
-      await loadTransactions(selectedGoal.id);
+      const { error } = await supabase
+        .from('savings_transactions')
+        .insert([transactionData]);
 
-      const updatedGoal = goals.find(g => g.id === selectedGoal.id);
-      if (updatedGoal) {
-        setSelectedGoal(updatedGoal);
+      if (error) throw error;
+
+      // Fetch the updated goal directly from database to ensure fresh data
+      const { data: freshGoal, error: goalError } = await supabase
+        .from('savings_goals')
+        .select('*')
+        .eq('id', selectedGoal.id)
+        .single();
+
+      if (goalError) throw goalError;
+
+      if (freshGoal) {
+        setSelectedGoal(freshGoal);
       }
+
+      // Reload all goals and transactions in parallel
+      await Promise.all([
+        loadGoals(),
+        loadTransactions(selectedGoal.id)
+      ]);
 
       setShowTransactionForm(null);
       resetTransactionForm();
+    } catch (error) {
+      console.error('Error submitting transaction:', error);
+      alert(t('errorOccurred'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -481,10 +502,10 @@ export function SavingManager() {
                 </button>
               </div>
 
-              <form onSubmit={handleTransactionSubmit} className="space-y-4">
+              <form onSubmit={handleTransactionSubmit} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    {showTransactionForm === 'deposit' ? t('depositAmount') : t('withdrawAmount')} ({currency === 'IDR' ? 'Rp' : '$'})
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                    {showTransactionForm === 'deposit' ? t('depositAmount') : t('withdrawAmount')}
                   </label>
                   <CurrencyInput
                     value={transactionFormData.amount}
@@ -493,6 +514,30 @@ export function SavingManager() {
                     placeholder="0"
                     required
                   />
+
+                  {/* Helper text */}
+                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                    {language === 'en'
+                      ? 'Enter amount without separators (e.g., 800000 for 800,000)'
+                      : 'Masukkan jumlah tanpa pemisah (contoh: 800000 untuk 800.000)'}
+                  </p>
+
+                  {/* Quick amount buttons */}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <p className="text-xs font-medium text-slate-600 dark:text-slate-400 w-full mb-1">
+                      {language === 'en' ? 'Quick amounts:' : 'Jumlah cepat:'}
+                    </p>
+                    {[100000, 500000, 1000000, 5000000].map((quickAmount) => (
+                      <button
+                        key={quickAmount}
+                        type="button"
+                        onClick={() => setTransactionFormData({ ...transactionFormData, amount: quickAmount.toString() })}
+                        className="px-3 py-1.5 text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
+                      >
+                        {currency === 'IDR' ? 'Rp' : '$'} {quickAmount.toLocaleString(language === 'en' ? 'en-US' : 'id-ID')}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div>
@@ -528,15 +573,24 @@ export function SavingManager() {
                       setShowTransactionForm(null);
                       resetTransactionForm();
                     }}
-                    className="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700"
+                    disabled={isSubmitting}
+                    className="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {t('cancel')}
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600"
+                    disabled={isSubmitting}
+                    className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    {t('save')}
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>{language === 'en' ? 'Saving...' : 'Menyimpan...'}</span>
+                      </>
+                    ) : (
+                      t('save')
+                    )}
                   </button>
                 </div>
               </form>

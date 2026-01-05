@@ -192,21 +192,44 @@ export function CurrencyInput({
   };
 
   return (
-    <input
-      ref={inputRef}
-      id={id}
-      type="text"
-      inputMode="decimal"
-      value={displayValue}
-      onChange={handleChange}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
-      onKeyDown={handleKeyPress}
-      placeholder={`${getCurrencySymbol(currency)} ${placeholder}`}
-      required={required}
-      disabled={disabled}
-      className={className}
-      autoComplete="off"
-    />
+    <div className="relative">
+      {/* Currency prefix badge - always visible */}
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+        <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-semibold text-sm">
+          {getCurrencySymbol(currency)}
+        </span>
+      </div>
+
+      {/* Input field with padding for prefix */}
+      <input
+        ref={inputRef}
+        id={id}
+        type="text"
+        inputMode="decimal"
+        value={displayValue}
+        onChange={handleChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyPress}
+        placeholder={placeholder}
+        required={required}
+        disabled={disabled}
+        className={`pl-20 pr-4 py-3 text-lg font-semibold ${className} ${
+          isFocused
+            ? 'ring-2 ring-emerald-500 border-emerald-500'
+            : ''
+        }`}
+        autoComplete="off"
+      />
+
+      {/* Helper text showing formatted value when not focused */}
+      {!isFocused && value && parseFloat(value) > 0 && (
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+          <span className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded">
+            {formatNumber(value, currency).replace(/\B(?=(\d{3})+(?!\d))/g, currency === 'IDR' ? '.' : ',')}
+          </span>
+        </div>
+      )}
+    </div>
   );
 }
