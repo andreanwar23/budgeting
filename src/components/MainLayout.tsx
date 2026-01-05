@@ -3,6 +3,7 @@ import { Sidebar } from '../components/Sidebar';
 import { Dashboard } from '../components/Dashboard';
 import { CategoryManagerView } from '../components/CategoryManagerView';
 import { KasbonManager } from '../components/KasbonManager';
+import { SavingManager } from '../components/SavingManager';
 import { Charts } from '../components/Charts';
 import { Settings } from '../components/Settings';
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -39,6 +40,13 @@ export function MainLayout() {
         return (
           <ErrorBoundary>
             <KasbonManager />
+          </ErrorBoundary>
+        );
+
+      case 'savings':
+        return (
+          <ErrorBoundary>
+            <SavingManager />
           </ErrorBoundary>
         );
 

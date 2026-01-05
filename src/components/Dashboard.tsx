@@ -6,7 +6,8 @@ import {
   Plus,
   TrendingUp,
   TrendingDown,
-  Wallet
+  Wallet,
+  PiggyBank
 } from 'lucide-react';
 import { TransactionForm } from './TransactionForm';
 import { TransactionList } from './TransactionList';
@@ -26,6 +27,9 @@ export function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalSavings, setTotalSavings] = useState(0);
+  const [monthlySavingsAmount, setMonthlySavingsAmount] = useState(0);
+  const [totalKasbon, setTotalKasbon] = useState(0);
 
   // === UI STATE ===
   const [showForm, setShowForm] = useState(false);
@@ -46,6 +50,8 @@ export function Dashboard() {
   useEffect(() => {
     loadCategories();
     loadTransactions();
+    loadSavingsData();
+    loadKasbonData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -92,6 +98,56 @@ export function Dashboard() {
     }
 
     setLoading(false);
+  };
+
+  const loadSavingsData = async () => {
+    if (!user?.id) return;
+
+    const { data, error } = await supabase
+      .from('savings_goals')
+      .select('current_amount, created_at')
+      .eq('user_id', user.id);
+
+    if (!error && data) {
+      const total = data.reduce((sum, goal) => sum + Number(goal.current_amount), 0);
+      setTotalSavings(total);
+
+      const today = new Date();
+      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+      const { data: monthlyTransactions, error: txError } = await supabase
+        .from('savings_transactions')
+        .select('amount, type, date')
+        .eq('user_id', user.id)
+        .gte('date', firstDayOfMonth.toISOString().split('T')[0])
+        .lte('date', today.toISOString().split('T')[0]);
+
+      if (!txError && monthlyTransactions) {
+        const monthlyAmount = monthlyTransactions.reduce((sum, tx) => {
+          if (tx.type === 'deposit') {
+            return sum + Number(tx.amount);
+          } else {
+            return sum - Number(tx.amount);
+          }
+        }, 0);
+        setMonthlySavingsAmount(monthlyAmount);
+      }
+    }
+  };
+
+  const loadKasbonData = async () => {
+    if (!user?.id) return;
+
+    const { data, error } = await supabase
+      .from('kasbon')
+      .select('amount')
+      .eq('user_id', user.id)
+      .eq('status', 'unpaid');
+
+    if (!error && data) {
+      const total = data.reduce((sum, kasbon) => sum + Number(kasbon.amount), 0);
+      setTotalKasbon(total);
+    }
   };
 
   const applyFilters = () => {
@@ -263,10 +319,10 @@ export function Dashboard() {
   };
 
   const monthlyStats = calculateCurrentMonthStats();
-  const monthlyBalance = monthlyStats.income - monthlyStats.expense;
+  const monthlyBalance = monthlyStats.income - monthlyStats.expense - monthlySavingsAmount - totalKasbon;
 
   const overallStats = calculateOverallBalance();
-  const overallBalance = overallStats.income - overallStats.expense;
+  const overallBalance = overallStats.income - overallStats.expense - totalSavings - totalKasbon;
 
   const stats = calculateFilteredStats();
   const balance = stats.income - stats.expense;
@@ -309,8 +365,8 @@ export function Dashboard() {
           }
           description={
             language === 'en'
-              ? 'Net balance for the current month (income - expense). Automatically resets every 1st of the month.'
-              : 'Saldo bersih untuk bulan berjalan (pemasukan - pengeluaran). Data otomatis reset setiap tanggal 1.'
+              ? 'Net balance for the current month (income - expense - savings - loans). Automatically resets every 1st of the month.'
+              : 'Saldo bersih untuk bulan berjalan (pemasukan - pengeluaran - tabungan - kasbon). Data otomatis reset setiap tanggal 1.'
           }
           amount={monthlyBalance}
           icon={Wallet}
@@ -332,12 +388,31 @@ export function Dashboard() {
           }
           description={
             language === 'en'
-              ? 'Total income and expenses since you first used the app. Not affected by date filters.'
-              : 'Total seluruh pemasukan dan pengeluaran sejak pertama kali menggunakan aplikasi. Tidak terpengaruh filter tanggal.'
+              ? 'Total income and expenses since you first used the app (minus savings and loans). Not affected by date filters.'
+              : 'Total seluruh pemasukan dan pengeluaran sejak pertama kali menggunakan aplikasi (dikurangi tabungan dan kasbon). Tidak terpengaruh filter tanggal.'
           }
           amount={overallBalance}
           icon={Wallet}
           color="purple"
+          highlight={false}
+        />
+
+        {/* Total Savings */}
+        <StatsCard
+          title={t('totalSavings')}
+          subtitle={
+            language === 'en'
+              ? 'Total Saved'
+              : 'Total Ditabung'
+          }
+          description={
+            language === 'en'
+              ? 'Total amount saved across all savings goals. Click Savings menu to manage your goals.'
+              : 'Total jumlah yang telah ditabung di semua target. Klik menu Menabung untuk kelola target Anda.'
+          }
+          amount={totalSavings}
+          icon={PiggyBank}
+          color="emerald"
           highlight={false}
         />
 

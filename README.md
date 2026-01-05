@@ -1,13 +1,13 @@
 # Finance Tracker - Aplikasi Catatan Keuangan
 
-![Version](https://img.shields.io/badge/version-3.1.0-blue.svg)
+![Version](https://img.shields.io/badge/version-3.3.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)
 
-Aplikasi web modern untuk mengelola keuangan pribadi dengan fitur lengkap, responsive, dan dapat dikonversi menjadi APK. Dilengkapi dengan dark mode, multi-bahasa, multi-currency, kasbon management, dan antarmuka yang intuitif.
+Aplikasi web modern untuk mengelola keuangan pribadi dengan fitur lengkap, responsive, dan dapat dikonversi menjadi APK. Dilengkapi dengan dark mode, multi-bahasa, multi-currency, kasbon management, savings goals, dan antarmuka yang intuitif.
 
-**Versi:** 3.1.0
-**Terakhir Diperbarui:** December 4, 2025
+**Versi:** 3.3.0
+**Terakhir Diperbarui:** January 5, 2026
 **Status:** Production Ready ✅
 
 ---
@@ -15,6 +15,7 @@ Aplikasi web modern untuk mengelola keuangan pribadi dengan fitur lengkap, respo
 ## 📋 Daftar Isi
 
 - [Fitur Utama](#-fitur-utama)
+- [Fitur Terbaru v3.3.0](#-fitur-terbaru-v330)
 - [Fitur Terbaru v3.1.0](#-fitur-terbaru-v310)
 - [Bug Fixes](#-bug-fixes)
 - [Screenshot](#-screenshot)
@@ -51,6 +52,14 @@ Aplikasi web modern untuk mengelola keuangan pribadi dengan fitur lengkap, respo
 - 🔍 Filter & search kasbon
 - 📅 Auto-tracking tanggal pelunasan
 
+### Manajemen Tabungan (Savings Goals)
+- 🏆 Buat target tabungan dengan jumlah dan tanggal target
+- 💰 Setor dan tarik dana dari target tabungan
+- 📊 Monitor progress untuk setiap target
+- 📈 Dashboard menampilkan total tabungan dan progress keseluruhan
+- 📝 Riwayat transaksi lengkap (deposit & withdrawal)
+- 🎯 Saldo otomatis terintegrasi dengan balance calculation
+
 ### Pengaturan & Kustomisasi
 - 🌙 **Dark/Light Mode** - Toggle tema dengan persistensi
 - 🌍 **Multi-bahasa** - English & Bahasa Indonesia
@@ -64,7 +73,40 @@ Aplikasi web modern untuk mengelola keuangan pribadi dengan fitur lengkap, respo
 
 ---
 
-## 🎉 Fitur Terbaru (v3.1.0)
+## 🎉 Fitur Terbaru (v3.3.0)
+
+### ✅ Savings/Menabung Feature
+**Fitur Lengkap:**
+- 🏆 **Savings Goals Management** - Buat target tabungan dengan nama, jumlah target, dan tanggal target (opsional)
+- 💰 **Deposit & Withdrawal** - Setor dana ke target dan tarik dana ketika dibutuhkan
+- 📊 **Progress Tracking** - Monitor kemajuan setiap target dengan progress bar dan persentase
+- 📈 **Dashboard Integration** - Kartu "Total Savings" di dashboard menampilkan total semua tabungan
+- 📝 **Transaction History** - Riwayat lengkap semua setoran dan penarikan untuk setiap target
+- 🎯 **Smart Balance Calculation** - Saldo bulan ini dan keseluruhan otomatis dikurangi dengan tabungan dan kasbon
+- 🌍 **Multi-language Support** - Tersedia dalam Bahasa Indonesia dan English
+- 🌙 **Dark Mode Support** - Semua tampilan savings mendukung dark mode
+
+**Database Tables:**
+- `savings_goals` - Menyimpan target tabungan
+- `savings_transactions` - Menyimpan riwayat deposit dan withdrawal
+- Automatic triggers untuk update `current_amount` ketika ada transaksi
+
+**Cara Menggunakan:**
+1. Klik menu "Menabung" di sidebar
+2. Klik "Tambah Target" untuk membuat target tabungan baru
+3. Isi nama target, jumlah target, dan tanggal (opsional)
+4. Klik target untuk melihat detail dan melakukan deposit/withdrawal
+5. Monitor progress dan total tabungan di dashboard
+
+**Benefits:**
+- Membantu merencanakan dan mencapai tujuan finansial
+- Saldo tetap akurat karena terintegrasi dengan balance calculation
+- Histori transaksi lengkap untuk audit dan tracking
+- UI intuitif dengan progress bar visual
+
+---
+
+## 🎉 Previous Features (v3.1.0)
 
 ### ✅ Enhanced Kasbon Management
 **Improvements:**

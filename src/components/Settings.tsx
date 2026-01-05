@@ -200,57 +200,63 @@ export function Settings({ openTab }: SettingsProps) {
                       BU - Budgeting Uang
                     </p>
                     <p className="mt-1">
-                      {language === 'en' ? 'Version 3.2.0' : 'Versi 3.2.0'}
+                      {language === 'en' ? 'Version 3.3.0' : 'Versi 3.3.0'}
                     </p>
                     <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
                       {language === 'en'
-                        ? 'Last updated: December 10, 2025'
-                        : 'Terakhir diperbarui: 10 Desember 2025'}
+                        ? 'Last updated: January 5, 2026'
+                        : 'Terakhir diperbarui: 5 Januari 2026'}
                     </p>
                   </div>
 
                   <p>
                     {language === 'en'
-                      ? 'A modern, full-featured personal finance management application built with React, TypeScript, and Supabase. Track your income, expenses, and loans with powerful analytics and beautiful visualizations. Now with enhanced kasbon management and improved reporting!'
-                      : 'Aplikasi manajemen keuangan pribadi yang modern dan lengkap, dibangun dengan React, TypeScript, dan Supabase. Lacak pemasukan, pengeluaran, dan kasbon Anda dengan analitik yang powerful dan visualisasi yang indah. Kini dengan manajemen kasbon yang ditingkatkan dan pelaporan yang lebih baik!'}
+                      ? 'A modern, full-featured personal finance management application built with React, TypeScript, and Supabase. Track your income, expenses, loans, and savings goals with powerful analytics and beautiful visualizations. Now with comprehensive savings management!'
+                      : 'Aplikasi manajemen keuangan pribadi yang modern dan lengkap, dibangun dengan React, TypeScript, dan Supabase. Lacak pemasukan, pengeluaran, kasbon, dan target tabungan Anda dengan analitik yang powerful dan visualisasi yang indah. Kini dengan manajemen tabungan yang komprehensif!'}
                   </p>
 
                   <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-700">
                     <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 mb-1">
                       {language === 'en'
-                        ? "✨ What's New in v3.2.0:"
-                        : '✨ Apa yang Baru di v3.2.0:'}
+                        ? "✨ What's New in v3.3.0:"
+                        : '✨ Apa yang Baru di v3.3.0:'}
                     </p>
                     <ul className="text-xs space-y-0.5">
                       <li>
                         •{' '}
                         {language === 'en'
-                          ? 'Complete English localization (100% coverage)'
-                          : 'Lokalisasi bahasa Inggris lengkap (cakupan 100%)'}
+                          ? 'New Savings/Menabung feature with goal tracking'
+                          : 'Fitur Menabung baru dengan pelacakan target'}
                       </li>
                       <li>
                         •{' '}
                         {language === 'en'
-                          ? 'Fixed currency input display issue (Rp 0 shadow)'
-                          : 'Perbaikan tampilan input mata uang (bayangan Rp 0)'}
+                          ? 'Create savings goals with target amounts and dates'
+                          : 'Buat target tabungan dengan jumlah dan tanggal target'}
                       </li>
                       <li>
                         •{' '}
                         {language === 'en'
-                          ? 'Improved dark mode support across all forms'
-                          : 'Dukungan mode gelap lebih baik di semua form'}
+                          ? 'Deposit and withdraw funds from goals'
+                          : 'Setor dan tarik dana dari target tabungan'}
                       </li>
                       <li>
                         •{' '}
                         {language === 'en'
-                          ? 'Enhanced translation system with 70+ keys'
-                          : 'Sistem terjemahan ditingkatkan dengan 70+ kunci'}
+                          ? 'Progress bars and transaction history'
+                          : 'Progress bar dan riwayat transaksi lengkap'}
                       </li>
                       <li>
                         •{' '}
                         {language === 'en'
-                          ? 'All UI elements now properly translated'
-                          : 'Semua elemen UI sekarang diterjemahkan dengan benar'}
+                          ? 'Smart balance calculation (minus savings & loans)'
+                          : 'Kalkulasi saldo pintar (dikurangi tabungan & kasbon)'}
+                      </li>
+                      <li>
+                        •{' '}
+                        {language === 'en'
+                          ? 'Total Savings card on dashboard'
+                          : 'Kartu Total Tabungan di dashboard'}
                       </li>
                     </ul>
                   </div>
@@ -279,6 +285,11 @@ export function Settings({ openTab }: SettingsProps) {
                         {language === 'en'
                           ? 'Enhanced loan tracking (Kasbon) with auto paid-date'
                           : 'Sistem pelacakan kasbon dengan tanggal pelunasan otomatis'}
+                      </li>
+                      <li>
+                        {language === 'en'
+                          ? 'Savings goals with progress tracking and transactions'
+                          : 'Target tabungan dengan pelacakan progres dan transaksi'}
                       </li>
                       <li>
                         {language === 'en'

@@ -4,6 +4,7 @@ import {
   Receipt,
   FolderOpen,
   HandCoins,
+  PiggyBank,
   BarChart3,
   Settings as SettingsIcon,
   LogOut,
@@ -71,6 +72,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     { id: 'dashboard', label: t('dashboard'), icon: LayoutDashboard },
     { id: 'categories', label: t('categories'), icon: FolderOpen },
     { id: 'kasbon', label: t('kasbon'), icon: HandCoins },
+    { id: 'savings', label: t('savings'), icon: PiggyBank },
     { id: 'reports', label: t('reports'), icon: BarChart3 },
     { id: 'settings', label: t('settings'), icon: SettingsIcon },
   ];

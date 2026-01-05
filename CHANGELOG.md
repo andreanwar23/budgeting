@@ -163,6 +163,155 @@ From v3.x to v4.0:
 
 ---
 
+## [3.3.0] - 2026-01-05
+
+### MAJOR FEATURE: Savings/Menabung Management System
+
+This release introduces a comprehensive savings goals management system with full integration into the existing financial tracking infrastructure.
+
+### Added
+
+#### Savings Goals Feature
+- **Savings Goals Management**: Create, edit, and delete savings goals with customizable targets
+  - Goal name and optional notes
+  - Target amount with validation
+  - Start date (defaults to today)
+  - Optional target date for deadline tracking
+  - Automatic progress calculation and visualization
+
+- **Deposit & Withdrawal System**: Full transaction management for savings goals
+  - Deposit funds to any goal
+  - Withdraw funds with validation (cannot exceed current amount)
+  - Transaction date tracking
+  - Optional notes for each transaction
+  - Real-time balance updates
+
+- **Progress Tracking & Visualization**:
+  - Individual progress bars for each goal
+  - Overall savings progress across all goals
+  - Current amount vs target amount display
+  - Remaining amount calculation
+  - Percentage completion indicators
+
+- **Dashboard Integration**:
+  - New "Total Savings" card displaying aggregate savings
+  - Monthly savings amount tracking
+  - Smart balance calculation: Income - Expenses - Savings - Kasbon
+  - Savings included in "This Month Balance" calculation
+  - Savings included in "Overall Balance" calculation
+
+- **Transaction History**:
+  - Complete history of deposits and withdrawals
+  - Chronological display with dates
+  - Type indicators (deposit/withdraw)
+  - Amount and notes display
+  - Automatic sorting by date
+
+#### Database Schema
+- **savings_goals table**:
+  - Stores savings goal information
+  - Tracks current_amount and target_amount
+  - Optional target_date for deadline tracking
+  - Full RLS security policies
+  - Optimized indexes for performance
+
+- **savings_transactions table**:
+  - Stores all deposit and withdrawal transactions
+  - Links to savings_goals via foreign key
+  - Cascade delete when goal is removed
+  - Type validation (deposit/withdraw)
+  - Full RLS security policies
+
+- **Database Triggers**:
+  - Automatic current_amount updates on transaction insert/update/delete
+  - Ensures data consistency
+  - Transaction-safe operations
+
+#### UI Components
+- **SavingManager**: Main savings management component
+  - Goals list view with summary cards
+  - Add/edit goal forms
+  - Goal detail view with transactions
+  - Empty state for new users
+  - Responsive grid layout
+
+- **Navigation**:
+  - New "Menabung/Savings" menu item with PiggyBank icon
+  - Positioned between Kasbon and Reports
+  - Active state highlighting
+  - Proper routing integration
+
+#### Translations
+- Complete Indonesian and English translations for all savings features
+- 40+ new translation keys added
+- Consistent terminology across all UI elements
+
+### Changed
+
+#### Balance Calculations
+- **Monthly Balance**: Now subtracts monthly savings deposits (net) and total kasbon
+- **Overall Balance**: Now subtracts total savings and total kasbon
+- Updated card descriptions to reflect new calculation logic
+- More accurate representation of available funds
+
+#### Dashboard Display
+- Expanded stats grid from 4 to 5 cards (added Total Savings)
+- Updated balance card descriptions with savings information
+- Improved context for users about what each balance represents
+
+### Technical Improvements
+
+#### Performance
+- Optimized database queries for savings data loading
+- Efficient aggregate calculations for total savings
+- Indexed foreign keys for fast joins
+- Lazy loading of transaction history
+
+#### Security
+- Row Level Security (RLS) on all savings tables
+- User isolation - users can only access their own goals
+- Validation on amounts (must be > 0)
+- Withdrawal validation (cannot exceed current amount)
+- Confirmation dialogs for destructive actions
+
+#### Code Quality
+- TypeScript interfaces for type safety
+- Consistent error handling
+- Reusable CurrencyInput component
+- Clean component architecture
+- Proper state management
+
+### Migration Guide
+
+#### Database Migration
+Run the SAVINGS_MIGRATION.sql file via Supabase Dashboard:
+1. Navigate to SQL Editor in Supabase Dashboard
+2. Copy contents of SAVINGS_MIGRATION.sql
+3. Execute the migration
+4. Verify tables created: savings_goals, savings_transactions
+5. Verify triggers and policies are active
+
+#### No Breaking Changes
+All changes are additive - existing functionality remains unchanged.
+
+### Documentation
+
+- Updated README.md with Savings feature section
+- Added comprehensive feature documentation
+- Updated version to 3.3.0
+- Updated last modified date
+
+### Benefits
+
+1. **Financial Goal Setting**: Users can now set and track savings goals
+2. **Accurate Balance Tracking**: Savings automatically factored into balance calculations
+3. **Progress Visualization**: Clear progress indicators motivate users
+4. **Complete History**: Full audit trail of all savings transactions
+5. **Multi-language Support**: Works seamlessly in both Indonesian and English
+6. **Dark Mode Support**: Consistent experience across themes
+
+---
+
 ## [3.1.0] - 2025-12-04
 
 ### Kasbon Improvements
