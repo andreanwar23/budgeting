@@ -118,29 +118,13 @@ export function AuthForm() {
     }
 
     try {
-      // OPTION 1: Secure Implementation (Recommended - No email validation)
-      // Uncomment this for production use - doesn't reveal if email exists
-      /*
-      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-
-      if (error) {
-        setError('Terjadi kesalahan. Silakan coba lagi.');
-      } else {
-        setResetEmailSent(true);
-        setForgotPasswordEmail('');
-      }
-      */
-
-      // OPTION 2: With Email Validation (As Requested)
-      // ⚠️ WARNING: This reveals if emails exist - less secure!
-      // Check if user exists using Edge Function
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      const checkResponse = await fetch(
-        `${supabaseUrl}/functions/v1/check-user-exists`,
+      // Call send-reset edge function directly
+      // This function handles all the logic: check user exists, check verification, send email
+      const resetResponse = await fetch(
+        `${supabaseUrl}/functions/v1/send-reset`,
         {
           method: 'POST',
           headers: {
@@ -151,41 +135,24 @@ export function AuthForm() {
         }
       );
 
-      if (!checkResponse.ok) {
-        const errorData = await checkResponse.json();
-        throw new Error(errorData.error || 'Failed to verify email');
+      if (!resetResponse.ok) {
+        const errorData = await resetResponse.json();
+        throw new Error(errorData.error || 'Gagal mengirim email reset password');
       }
 
-      const checkData = await checkResponse.json();
+      const resetData = await resetResponse.json();
 
-      // If user doesn't exist, show clear error message
-      if (!checkData.exists) {
-        setError('Email tidak ditemukan dalam sistem kami.\n\nBelum punya akun? Klik "Daftar" untuk membuat akun baru.');
-        setLoading(false);
-        return;
-      }
-
-      // User exists, proceed with password reset
-      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-
-      if (error) {
-        if (error.message.includes('rate limit')) {
-          setError('Terlalu banyak permintaan. Silakan tunggu beberapa menit dan coba lagi.');
-        } else {
-          setError(error.message || 'Terjadi kesalahan. Silakan coba lagi.');
-        }
-      } else {
+      // Edge function always returns success: true with generic message for security
+      if (resetData.success) {
         setResetEmailSent(true);
         setForgotPasswordEmail('');
+      } else {
+        setError('Terjadi kesalahan. Silakan coba lagi.');
       }
     } catch (err: any) {
       console.error('Password reset error:', err);
       if (err.message && (err.message.includes('fetch') || err.message.includes('Failed to fetch'))) {
-        setError('Gagal terhubung ke server. Periksa koneksi internet Anda.');
-      } else if (err.message && err.message.includes('verify email')) {
-        setError('Gagal memverifikasi email. Silakan coba lagi.');
+        setError('Gagal terhubung ke server. Periksa koneksi internet Anda dan coba lagi.');
       } else {
         setError('Terjadi kesalahan. Silakan coba lagi.');
       }
