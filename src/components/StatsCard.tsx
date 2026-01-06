@@ -32,7 +32,7 @@ export function StatsCard({ title, subtitle, description, amount, icon: Icon, co
       highlight ? 'transform hover:scale-[1.02]' : ''
     }`}>
       <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
             <p className={`text-xs sm:text-sm font-semibold ${
               highlight ? 'text-blue-700 dark:text-blue-400' : 'text-slate-600 dark:text-slate-300'
@@ -67,7 +67,7 @@ export function StatsCard({ title, subtitle, description, amount, icon: Icon, co
           {subtitle && (
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{subtitle}</p>
           )}
-          <p className={`text-xl sm:text-2xl font-bold truncate ${
+          <p className={`text-xl sm:text-2xl font-bold break-words ${
             highlight ? 'text-blue-700 dark:text-blue-400' : 'text-slate-800 dark:text-white'
           }`}>
             {formatCurrency(amount)}

@@ -99,6 +99,8 @@ const translations = {
     // Theme
     darkMode: 'Dark Mode',
     lightMode: 'Light Mode',
+    collapseSidebar: 'Collapse Sidebar',
+    expandSidebar: 'Expand Sidebar',
     // Date periods
     today: 'Today',
     yesterday: 'Yesterday',
@@ -220,6 +222,8 @@ const translations = {
     // Theme
     darkMode: 'Mode Gelap',
     lightMode: 'Mode Terang',
+    collapseSidebar: 'Ciutkan Sidebar',
+    expandSidebar: 'Perluas Sidebar',
     // Date periods
     today: 'Hari Ini',
     yesterday: 'Kemarin',

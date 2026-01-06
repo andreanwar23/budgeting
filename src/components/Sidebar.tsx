@@ -13,7 +13,9 @@ import {
   Wallet,
   Sun,
   Moon,
-  User
+  User,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSettings } from '../contexts/SettingsContext';
@@ -28,6 +30,10 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const { signOut, user } = useAuth();
   const { theme, setTheme, t } = useSettings();
   const [isOpen, setIsOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    return saved === 'true';
+  });
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const loadUserProfile = async () => {
@@ -85,6 +91,12 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     }, 100);
   };
 
+  const toggleCollapse = () => {
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    localStorage.setItem('sidebarCollapsed', String(newState));
+  };
+
   return (
     <>
       {/* Mobile Menu Button */}
@@ -109,7 +121,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
       <aside
         className={`fixed lg:sticky top-0 left-0 inset-y-0 max-h-screen bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transition-all duration-300 ease-in-out z-40 ${
           isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0 lg:shadow-none'
-        } w-[80%] sm:w-72`}
+        } ${isCollapsed ? 'lg:w-20' : 'w-[80%] sm:w-72'}`}
         style={{
           WebkitOverflowScrolling: 'touch',
           overscrollBehavior: 'contain',
@@ -118,14 +130,16 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="shrink-0 p-6 border-b border-slate-200 dark:border-slate-700">
-            <div className="flex items-center gap-3">
+            <div className={`flex items-center gap-3 ${isCollapsed ? 'lg:justify-center' : ''}`}>
               <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-2 rounded-xl">
                 <Wallet className="w-6 h-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-slate-800 dark:text-white">{t('appName')}</h1>
-                <p className="text-xs text-slate-600 dark:text-slate-400">{t('appFullName')}</p>
-              </div>
+              {!isCollapsed && (
+                <div className="lg:block">
+                  <h1 className="text-xl font-bold text-slate-800 dark:text-white">{t('appName')}</h1>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">{t('appFullName')}</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -134,28 +148,33 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
             <button
               onClick={() => {
                 setIsOpen(false);
-                // Request parent to open settings + profile tab
                 onViewChange('settings', { openTab: 'profile' });
               }}
-              className="group w-full flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 p-2 rounded-lg transition-all duration-200 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-              title="Klik untuk membuka profil"
+              className={`group w-full flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 p-2 rounded-lg transition-all duration-200 cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
+                isCollapsed ? 'lg:justify-center' : ''
+              }`}
+              title={isCollapsed ? user?.email || 'Profile' : 'Klik untuk membuka profil'}
             >
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
                   alt="Profile"
-                  className="w-10 h-10 rounded-full object-cover border-2 border-emerald-500"
+                  className="w-10 h-10 rounded-full object-cover border-2 border-emerald-500 flex-shrink-0"
                 />
               ) : (
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white font-semibold">
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
                   {user?.email?.charAt(0).toUpperCase() ?? '?'}
                 </div>
               )}
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-sm font-medium text-slate-800 dark:text-white truncate">{user?.email}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{t('activeUser')}</p>
-              </div>
-              <User className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
+              {!isCollapsed && (
+                <>
+                  <div className="flex-1 min-w-0 text-left lg:block">
+                    <p className="text-sm font-medium text-slate-800 dark:text-white truncate">{user?.email}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{t('activeUser')}</p>
+                  </div>
+                  <User className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors lg:block" />
+                </>
+              )}
             </button>
           </div>
 
@@ -174,10 +193,13 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
                         isActive
                           ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md'
                           : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
-                      }`}
+                      } ${isCollapsed ? 'lg:justify-center lg:px-3' : ''}`}
+                      title={isCollapsed ? item.label : ''}
                     >
                       <Icon className="w-5 h-5 flex-shrink-0" />
-                      <span className="font-medium">{item.label}</span>
+                      {!isCollapsed && (
+                        <span className="font-medium lg:block">{item.label}</span>
+                      )}
                     </button>
                   </li>
                 );
@@ -187,21 +209,49 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
 
           {/* Bottom actions */}
           <div className="shrink-0 p-4 border-t border-slate-200 dark:border-slate-700 space-y-2">
+            {/* Collapse Toggle Button (Desktop Only) */}
+            <button
+              onClick={toggleCollapse}
+              className={`hidden lg:flex w-full items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200 ${
+                isCollapsed ? 'justify-center px-3' : ''
+              }`}
+              title={isCollapsed ? t('expandSidebar') || 'Expand Sidebar' : t('collapseSidebar') || 'Collapse Sidebar'}
+            >
+              {isCollapsed ? (
+                <ChevronRight className="w-5 h-5 flex-shrink-0" />
+              ) : (
+                <>
+                  <ChevronLeft className="w-5 h-5 flex-shrink-0" />
+                  <span className="font-medium lg:block">{t('collapseSidebar') || 'Collapse'}</span>
+                </>
+              )}
+            </button>
+
             <button
               onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-              className="w-full flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200"
+              className={`w-full flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors duration-200 ${
+                isCollapsed ? 'lg:justify-center lg:px-3' : ''
+              }`}
+              title={isCollapsed ? (theme === 'light' ? t('darkMode') : t('lightMode')) : ''}
             >
-              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-              <span className="font-medium">
-                {theme === 'light' ? t('darkMode') : t('lightMode')}
-              </span>
+              {theme === 'light' ? <Moon className="w-5 h-5 flex-shrink-0" /> : <Sun className="w-5 h-5 flex-shrink-0" />}
+              {!isCollapsed && (
+                <span className="font-medium lg:block">
+                  {theme === 'light' ? t('darkMode') : t('lightMode')}
+                </span>
+              )}
             </button>
             <button
               onClick={signOut}
-              className="w-full flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
+              className={`w-full flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200 ${
+                isCollapsed ? 'lg:justify-center lg:px-3' : ''
+              }`}
+              title={isCollapsed ? t('logout') : ''}
             >
-              <LogOut className="w-5 h-5" />
-              <span className="font-medium">{t('logout')}</span>
+              <LogOut className="w-5 h-5 flex-shrink-0" />
+              {!isCollapsed && (
+                <span className="font-medium lg:block">{t('logout')}</span>
+              )}
             </button>
           </div>
         </div>
