@@ -18,6 +18,8 @@ export function AuthForm() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
   const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [showUnverifiedModal, setShowUnverifiedModal] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
   const { signIn, signUp, resendVerificationEmail } = useAuth();
 
   useEffect(() => {
@@ -48,6 +50,34 @@ export function AuthForm() {
     }
   }, [password, isSignUp]);
 
+  const checkUserVerificationStatus = async (userEmail: string): Promise<{ exists: boolean; verified: boolean } | null> => {
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/check-user-exists`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email: userEmail }),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        return { exists: data.exists, verified: data.verified };
+      }
+      return null;
+    } catch (err) {
+      console.error('Error checking user status:', err);
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -62,6 +92,15 @@ export function AuthForm() {
 
     try {
       if (isSignUp) {
+        // Check if user already exists before sign up
+        const userStatus = await checkUserVerificationStatus(email);
+
+        if (userStatus && userStatus.exists) {
+          setError('Email sudah terdaftar. Silakan login atau gunakan email lain.');
+          setLoading(false);
+          return;
+        }
+
         const { error, needsEmailVerification } = await signUp(email, password);
 
         if (error) {
@@ -81,8 +120,10 @@ export function AuthForm() {
 
         if (error) {
           if (error.message.includes('Email not confirmed')) {
-            setError('Email belum diverifikasi. Silakan cek inbox Anda dan klik link verifikasi.');
-            setVerificationEmail(email);
+            // Show improved unverified email modal
+            setUnverifiedEmail(email);
+            setShowUnverifiedModal(true);
+            setError('');
           } else if (error.message.includes('Invalid login credentials')) {
             setError('Email atau password salah.');
           } else if (error.message.includes('fetch') || error.message.includes('network')) {
@@ -376,6 +417,84 @@ export function AuthForm() {
           Aplikasi keuangan pribadi yang aman dan mudah digunakan
         </p>
       </div>
+
+      {/* Unverified Email Modal */}
+      {showUnverifiedModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => {
+            setShowUnverifiedModal(false);
+            setUnverifiedEmail('');
+          }}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-yellow-100 rounded-xl">
+                <AlertCircle className="w-6 h-6 text-yellow-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-slate-800">Email Belum Diverifikasi</h3>
+                <p className="text-sm text-slate-600">Your email address has not been verified yet</p>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
+              <p className="text-sm text-yellow-800 mb-3">
+                Akun Anda terdaftar tetapi email <strong>{unverifiedEmail}</strong> belum diverifikasi.
+                Silakan cek inbox email Anda dan klik link verifikasi.
+              </p>
+              <p className="text-xs text-yellow-700">
+                Jika tidak menerima email, periksa folder spam atau kirim ulang email verifikasi.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={async () => {
+                  setLoading(true);
+                  const { error: resendError } = await resendVerificationEmail(unverifiedEmail);
+                  if (resendError) {
+                    setError('Gagal mengirim ulang email. Silakan coba lagi.');
+                    setShowUnverifiedModal(false);
+                  } else {
+                    setShowUnverifiedModal(false);
+                    setVerificationSent(true);
+                    setVerificationEmail(unverifiedEmail);
+                    setUnverifiedEmail('');
+                    setEmail('');
+                    setPassword('');
+                  }
+                  setLoading(false);
+                }}
+                disabled={loading}
+                className="w-full px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              >
+                <Mail className="w-5 h-5" />
+                {loading ? 'Mengirim...' : 'Ya, Kirim Ulang Email Verifikasi'}
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowUnverifiedModal(false);
+                  setUnverifiedEmail('');
+                }}
+                className="w-full px-4 py-2.5 border border-slate-300 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors"
+              >
+                Tutup
+              </button>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-slate-200">
+              <p className="text-xs text-slate-500 text-center">
+                Link verifikasi biasanya dikirim dalam beberapa menit. Pastikan email Anda benar.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Forgot Password Modal */}
       {showForgotPassword && (

@@ -124,13 +124,14 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const userExists = data.users.some(user =>
+    const user = data.users.find(user =>
       user.email?.toLowerCase() === sanitizedEmail
     )
 
     return new Response(
       JSON.stringify({
-        exists: userExists
+        exists: !!user,
+        verified: user ? !!user.email_confirmed_at : false
       }),
       {
         status: 200,

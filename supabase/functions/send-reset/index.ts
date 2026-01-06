@@ -151,13 +151,19 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
-      email: sanitizedEmail,
-      options: {
+    // FIXED: Use client-side resetPasswordForEmail which automatically sends email
+    // Create a client instance (not admin) to use client-side auth methods
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    )
+
+    const { error: resetError } = await supabaseClient.auth.resetPasswordForEmail(
+      sanitizedEmail,
+      {
         redirectTo: `${Deno.env.get('SITE_URL') || 'http://localhost:5173'}/reset-password`
       }
-    })
+    )
 
     if (resetError) {
       console.error('Error sending reset link:', resetError)
