@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogIn, UserPlus, Wallet, AlertCircle, CheckCircle, Mail, KeyRound } from 'lucide-react';
+import { LogIn, UserPlus, Wallet, AlertCircle, CheckCircle, Mail, KeyRound, X } from 'lucide-react';
 import { validateEmailDomain, getPasswordStrength } from '../utils/emailValidation';
 import { supabase } from '../lib/supabase';
 
@@ -49,6 +49,28 @@ export function AuthForm() {
       setPasswordStrength(null);
     }
   }, [password, isSignUp]);
+
+  // Prevent Escape key from closing modals
+  useEffect(() => {
+    const handleEscapeKey = (e: KeyboardEvent) => {
+      // Only prevent Escape if a modal is open
+      if ((showUnverifiedModal || showForgotPassword) && e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        // Modal can only be closed via explicit close buttons
+      }
+    };
+
+    // Add event listener when modals are open
+    if (showUnverifiedModal || showForgotPassword) {
+      document.addEventListener('keydown', handleEscapeKey, true);
+    }
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey, true);
+    };
+  }, [showUnverifiedModal, showForgotPassword]);
 
   const checkUserVerificationStatus = async (userEmail: string): Promise<{ exists: boolean; verified: boolean } | null> => {
     try {
@@ -418,20 +440,29 @@ export function AuthForm() {
         </p>
       </div>
 
-      {/* Unverified Email Modal */}
+      {/* Unverified Email Modal - Persistent (only closes via explicit buttons) */}
       {showUnverifiedModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-          onClick={() => {
-            setShowUnverifiedModal(false);
-            setUnverifiedEmail('');
-          }}
+          // No onClick handler - backdrop clicks are disabled
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-3 mb-4">
+            {/* Close button (X) in top-right corner */}
+            <button
+              onClick={() => {
+                setShowUnverifiedModal(false);
+                setUnverifiedEmail('');
+              }}
+              className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              aria-label="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-4 pr-8">
               <div className="p-2 bg-yellow-100 rounded-xl">
                 <AlertCircle className="w-6 h-6 text-yellow-600" />
               </div>
@@ -496,21 +527,31 @@ export function AuthForm() {
         </div>
       )}
 
-      {/* Forgot Password Modal */}
+      {/* Forgot Password Modal - Persistent (only closes via explicit buttons) */}
       {showForgotPassword && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-          onClick={() => {
-            setShowForgotPassword(false);
-            setError('');
-            setResetEmailSent(false);
-          }}
+          // No onClick handler - backdrop clicks are disabled
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-3 mb-4">
+            {/* Close button (X) in top-right corner */}
+            <button
+              onClick={() => {
+                setShowForgotPassword(false);
+                setError('');
+                setResetEmailSent(false);
+                setForgotPasswordEmail('');
+              }}
+              className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              aria-label="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-4 pr-8">
               <div className="p-2 bg-emerald-100 rounded-xl">
                 <KeyRound className="w-6 h-6 text-emerald-600" />
               </div>
