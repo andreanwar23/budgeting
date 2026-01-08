@@ -17,6 +17,7 @@ import { DateRangePicker } from './DateRangePicker';
 import { CompactExportDropdown } from './CompactExportDropdown';
 import { CategoryManager } from './CategoryManager';
 import { QuickTransactionButton } from './QuickTransactionButton';
+import { BalanceBreakdownModal } from './BalanceBreakdownModal';
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -42,6 +43,19 @@ export function Dashboard() {
     startDate: '',
     endDate: ''
   });
+
+  // === MODAL STATE ===
+  const [showBreakdownModal, setShowBreakdownModal] = useState(false);
+  const [breakdownData, setBreakdownData] = useState<{
+    title: string;
+    items: Array<{
+      label: string;
+      amount: number;
+      icon: string;
+      color: string;
+    }>;
+    total: number;
+  } | null>(null);
 
   // locale utk tanggal sesuai bahasa
   const locale = language === 'en' ? 'en-US' : 'id-ID';
@@ -217,6 +231,99 @@ export function Dashboard() {
     }
   };
 
+  // ====== CLICK HANDLERS FOR STATS CARDS ======
+  const handleMonthlyBalanceClick = () => {
+    const breakdownItems = [
+      {
+        label: language === 'en' ? 'Total Income' : 'Total Pemasukan',
+        amount: monthlyStats.income,
+        icon: '📈',
+        color: 'text-emerald-600 dark:text-emerald-400'
+      },
+      {
+        label: language === 'en' ? 'Total Expenses' : 'Total Pengeluaran',
+        amount: -monthlyStats.expense,
+        icon: '📉',
+        color: 'text-rose-600 dark:text-rose-400'
+      },
+      {
+        label: language === 'en' ? 'Savings Deposits' : 'Setoran Tabungan',
+        amount: -monthlySavingsAmount,
+        icon: '🏦',
+        color: 'text-blue-600 dark:text-blue-400'
+      },
+      {
+        label: language === 'en' ? 'Loans (Kasbon)' : 'Kasbon',
+        amount: -totalKasbon,
+        icon: '💰',
+        color: 'text-amber-600 dark:text-amber-400'
+      }
+    ];
+
+    setBreakdownData({
+      title: language === 'en' ? 'This Month Balance Breakdown' : 'Rincian Saldo Bulan Ini',
+      items: breakdownItems,
+      total: monthlyBalance
+    });
+    setShowBreakdownModal(true);
+  };
+
+  const handleOverallBalanceClick = () => {
+    const breakdownItems = [
+      {
+        label: language === 'en' ? 'Total Income' : 'Total Pemasukan',
+        amount: overallStats.income,
+        icon: '📈',
+        color: 'text-emerald-600 dark:text-emerald-400'
+      },
+      {
+        label: language === 'en' ? 'Total Expenses' : 'Total Pengeluaran',
+        amount: -overallStats.expense,
+        icon: '📉',
+        color: 'text-rose-600 dark:text-rose-400'
+      },
+      {
+        label: language === 'en' ? 'Total Savings' : 'Total Tabungan',
+        amount: -totalSavings,
+        icon: '🏦',
+        color: 'text-blue-600 dark:text-blue-400'
+      },
+      {
+        label: language === 'en' ? 'Total Loans' : 'Total Kasbon',
+        amount: -totalKasbon,
+        icon: '💰',
+        color: 'text-amber-600 dark:text-amber-400'
+      }
+    ];
+
+    setBreakdownData({
+      title: language === 'en' ? 'Overall Balance Breakdown' : 'Rincian Saldo Keseluruhan',
+      items: breakdownItems,
+      total: overallBalance
+    });
+    setShowBreakdownModal(true);
+  };
+
+  const handleIncomeClick = () => {
+    setFilters(prev => ({ ...prev, type: 'income' }));
+    setTimeout(() => {
+      document.querySelector('.transaction-section')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }, 100);
+  };
+
+  const handleExpenseClick = () => {
+    setFilters(prev => ({ ...prev, type: 'expense' }));
+    setTimeout(() => {
+      document.querySelector('.transaction-section')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }, 100);
+  };
+
   // ====== HELPER FORMAT PERIODE UNTUK KARTU HARI INI / FILTER ======
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString(locale, {
@@ -372,6 +479,7 @@ export function Dashboard() {
           icon={Wallet}
           color="blue"
           highlight={true}
+          onClick={handleMonthlyBalanceClick}
         />
 
         {/* Saldo Keseluruhan – All-time */}
@@ -395,6 +503,7 @@ export function Dashboard() {
           icon={Wallet}
           color="purple"
           highlight={false}
+          onClick={handleOverallBalanceClick}
         />
 
         {/* Total Savings */}
@@ -433,6 +542,8 @@ export function Dashboard() {
           icon={TrendingUp}
           color="green"
           highlight={false}
+          onClick={handleIncomeClick}
+          clickHint={language === 'en' ? 'Click to filter' : 'Klik untuk filter'}
         />
 
         {/* Pengeluaran – sesuai tanggal (default: hari ini / filter) */}
@@ -452,10 +563,12 @@ export function Dashboard() {
           icon={TrendingDown}
           color="red"
           highlight={false}
+          onClick={handleExpenseClick}
+          clickHint={language === 'en' ? 'Click to filter' : 'Klik untuk filter'}
         />
       </div>
 
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 sm:p-6 mb-6">
+      <div className="transaction-section bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 sm:p-6 mb-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
           <h2 className="text-lg sm:text-xl font-semibold text-slate-800 dark:text-white">
             {t('transactions')}
@@ -504,6 +617,28 @@ export function Dashboard() {
           categories={categories}
           onCategoriesUpdate={loadCategories}
           onClose={() => setShowCategoryManager(false)}
+        />
+      )}
+
+      {breakdownData && (
+        <BalanceBreakdownModal
+          title={breakdownData.title}
+          items={breakdownData.items}
+          total={breakdownData.total}
+          isOpen={showBreakdownModal}
+          onClose={() => {
+            setShowBreakdownModal(false);
+            setBreakdownData(null);
+          }}
+          onViewTransactions={() => {
+            setShowBreakdownModal(false);
+            setTimeout(() => {
+              document.querySelector('.transaction-section')?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+              });
+            }, 100);
+          }}
         />
       )}
 
