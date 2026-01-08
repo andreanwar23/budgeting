@@ -128,11 +128,11 @@ Deno.serve(async (req: Request) => {
     if (!user) {
       return new Response(
         JSON.stringify({
-          success: true,
-          message: "If an account with this email exists, you will receive a password reset link shortly."
+          success: false,
+          error: "Email tidak terdaftar. Silakan daftar akun terlebih dahulu."
         }),
         {
-          status: 200,
+          status: 404,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       )
@@ -141,11 +141,11 @@ Deno.serve(async (req: Request) => {
     if (!user.email_confirmed_at) {
       return new Response(
         JSON.stringify({
-          success: true,
-          message: "If an account with this email exists, you will receive a password reset link shortly."
+          success: false,
+          error: "Email belum diverifikasi. Silakan verifikasi email Anda terlebih dahulu."
         }),
         {
-          status: 200,
+          status: 403,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       )

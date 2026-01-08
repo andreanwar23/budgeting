@@ -198,17 +198,15 @@ export function AuthForm() {
         }
       );
 
-      if (!resetResponse.ok) {
-        const errorData = await resetResponse.json();
-        throw new Error(errorData.error || 'Gagal mengirim email reset password');
-      }
-
       const resetData = await resetResponse.json();
 
-      // Edge function always returns success: true with generic message for security
-      if (resetData.success) {
+      // Check if the request was successful
+      if (resetResponse.ok && resetData.success) {
         setResetEmailSent(true);
         setForgotPasswordEmail('');
+      } else if (resetData.error) {
+        // Show specific error message from the edge function
+        setError(resetData.error);
       } else {
         setError('Terjadi kesalahan. Silakan coba lagi.');
       }
