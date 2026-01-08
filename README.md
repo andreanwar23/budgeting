@@ -1,20 +1,28 @@
 # Finance Tracker - Aplikasi Catatan Keuangan
 
-![Version](https://img.shields.io/badge/version-3.3.0-blue.svg)
+![Version](https://img.shields.io/badge/version-5.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)
 
-Aplikasi web modern untuk mengelola keuangan pribadi dengan fitur lengkap, responsive, dan dapat dikonversi menjadi APK. Dilengkapi dengan dark mode, multi-bahasa, multi-currency, kasbon management, savings goals, dan antarmuka yang intuitif.
+Aplikasi web modern untuk mengelola keuangan pribadi dengan fitur lengkap, responsive, dan dapat dikonversi menjadi APK. Dilengkapi dengan dark mode, multi-bahasa, multi-currency, kasbon management, savings goals, enhanced UI/UX, dan antarmuka yang intuitif.
 
-**Versi:** 3.3.0
-**Terakhir Diperbarui:** January 5, 2026
+**Versi:** 5.0.0
+**Terakhir Diperbarui:** January 8, 2026
 **Status:** Production Ready ✅
+
+> **🎉 Apa yang Baru di v5.0.0:**
+> - ✨ Enhanced dashboard UI with responsive grid layout
+> - 🎨 Modern card design with smooth animations
+> - 🔧 Fixed number wrapping in metric cards
+> - 🚀 Improved authentication with specific error messages
+> - 📊 Better sidebar state handling for optimal space usage
 
 ---
 
 ## 📋 Daftar Isi
 
 - [Fitur Utama](#-fitur-utama)
+- [Fitur Terbaru v5.0.0](#-fitur-terbaru-v500)
 - [Fitur Terbaru v3.3.0](#-fitur-terbaru-v330)
 - [Fitur Terbaru v3.1.0](#-fitur-terbaru-v310)
 - [Bug Fixes](#-bug-fixes)
@@ -73,7 +81,71 @@ Aplikasi web modern untuk mengelola keuangan pribadi dengan fitur lengkap, respo
 
 ---
 
-## 🎉 Fitur Terbaru (v3.3.0)
+## 🎉 Fitur Terbaru (v5.0.0)
+
+### ✨ Enhanced Dashboard UI/UX
+**Major Improvements:**
+- 📱 **Responsive Grid Layout** - Adaptive grid that perfectly handles both sidebar states
+  - Mobile: 1 column layout for optimal mobile viewing
+  - Tablet (sm): 2 columns for balanced space usage
+  - Desktop (xl): 3 columns when sidebar is expanded
+  - Large Desktop (2xl): 4 columns when sidebar is collapsed
+  - Prevents metric cards from becoming cramped
+  - Improved spacing with `gap-4 lg:gap-5` for visual breathing room
+
+- 🎨 **Modern Card Design** - Completely redesigned stats cards
+  - Upgraded to `rounded-2xl` corners for modern aesthetic
+  - Enhanced shadow hierarchy with smooth transitions
+  - Subtle gradient backgrounds for depth
+  - Larger, bolder typography (up to 3xl on xl screens)
+  - Improved icon containers with better shadows
+  - Micro-interactions: cards scale smoothly on hover
+  - Professional tooltip styling
+
+- 🔢 **Fixed Number Wrapping** - Currency amounts now display properly
+  - Uses `tabular-nums` for consistent digit spacing
+  - Prevents awkward line breaks in large numbers
+  - Optimized word spacing for readability
+  - Numbers stay on single line even in narrow cards
+
+### 🚀 Improved Authentication
+**Specific Error Messages:**
+- ❌ **Email Not Registered** - Clear message with "Daftar Akun Baru" button
+  - Shows: "Email tidak terdaftar. Silakan daftar akun terlebih dahulu."
+  - One-click registration redirect
+  - Eliminates user confusion
+
+- 🔒 **Email Unverified** - Opens modal with resend verification option
+  - Clear instructions for verification process
+  - Easy email resend functionality
+  - Professional modal design
+
+- 🔑 **Wrong Password** - Specific error instead of generic message
+  - Shows: "Password salah. Silakan coba lagi."
+  - User knows exactly what the issue is
+  - "Lupa password?" link readily available
+
+- 🌐 **Network Errors** - Clear troubleshooting guidance
+  - Helpful steps to resolve connection issues
+  - Better user experience during downtime
+
+**Password Reset Validation:**
+- ✅ Edge function now validates email existence before sending reset link
+- ❌ Returns 404 error for unregistered emails instead of fake success
+- 📧 Shows specific error message in frontend
+- 🔄 Better user flow with actionable buttons
+
+### 🎯 UX Enhancements
+**User Flow Improvements:**
+- Proactive user existence check before login attempt
+- One-click action buttons for common issues
+- Better error handling throughout the app
+- Smoother animations and transitions
+- Improved mobile responsiveness
+
+---
+
+## 🎉 Previous Features (v3.3.0)
 
 ### ✅ Savings/Menabung Feature
 **Fitur Lengkap:**

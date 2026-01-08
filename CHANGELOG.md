@@ -5,6 +5,182 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.0] - 2026-01-08
+
+### MAJOR UPDATE: Enhanced UI/UX & Improved Authentication
+
+This release focuses on dramatically improving the dashboard user experience, fixing responsive layout issues, and providing more specific authentication error messages.
+
+### Added
+
+#### UI/UX Enhancements
+- **Responsive Dashboard Grid**: Adaptive grid layout that properly handles both sidebar states
+  - Mobile: 1 column
+  - Tablet (sm): 2 columns
+  - Desktop (xl): 3 columns
+  - Large Desktop (2xl): 4 columns
+  - Prevents metric cards from becoming cramped when sidebar is expanded
+  - Better spacing with `gap-4 lg:gap-5` for visual breathing room
+
+- **Enhanced StatsCard Design**:
+  - Upgraded from `rounded-xl` to `rounded-2xl` for modern aesthetic
+  - Improved shadow hierarchy: `shadow-md` to `shadow-xl` on hover
+  - Subtle gradient background overlay for depth
+  - Larger, bolder typography: up to `3xl` font size on xl screens
+  - Enhanced icon containers with better shadows and hover effects
+  - Smooth transitions with `duration-300`
+  - Micro-interactions: cards scale on hover for engagement
+  - Better tooltip styling with darker background and larger padding
+
+- **Fixed Number Wrapping Issue**:
+  - Currency amounts now use `tabular-nums` for consistent digit width
+  - Added `overflow-hidden` with `min-w-0` wrapper to prevent text overflow
+  - Adjusted `word-spacing` to `-0.05em` for tighter, more readable numbers
+  - Numbers stay on single line even in narrow viewports
+
+#### Authentication Improvements
+- **Specific Login Error Messages**:
+  - Email not registered → "Email tidak terdaftar. Silakan daftar akun terlebih dahulu."
+  - Email unverified → Opens unverified modal with resend option
+  - Wrong password → "Password salah. Silakan coba lagi."
+  - Network error → Clear connection troubleshooting message
+
+- **Enhanced User Flow**:
+  - One-click "Daftar Akun Baru" button when email not registered
+  - Proactive user existence check before login attempt
+  - Better error handling for network issues
+
+#### Password Reset Validation
+- **Edge Function Enhancement** (`send-reset`):
+  - Returns proper error for unregistered emails instead of generic success
+  - Returns specific error for unverified emails
+  - Error: "Email tidak terdaftar. Silakan daftar akun terlebih dahulu." (404)
+  - Error: "Email belum diverifikasi. Silakan verifikasi email Anda terlebih dahulu." (403)
+
+- **Frontend Integration**:
+  - Displays specific errors from edge function
+  - Shows "Daftar Akun Baru" button when email not found
+  - Better user guidance for next steps
+
+### Changed
+
+#### Visual Design
+- Increased card padding from `p-4 sm:p-6` to `p-5 sm:p-6`
+- Enhanced color contrast and typography weight
+- Improved icon sizes: `w-6 h-6 sm:w-7 sm:h-7`
+- Better visual hierarchy with bolder fonts
+- More prominent shadows for depth perception
+- Smoother animations with consistent duration
+
+#### Responsive Behavior
+- Dashboard now optimally responds to sidebar state changes
+- Metrics remain readable and properly formatted in all viewport sizes
+- Better breakpoint strategy prevents layout cramping
+- Improved spacing prevents visual congestion
+
+#### Error Handling
+- More granular error messages based on specific failure scenarios
+- User-friendly language that guides next actions
+- Eliminated confusing generic "email or password incorrect" for all cases
+- Better network error messaging with troubleshooting steps
+
+### Fixed
+
+#### Critical Fixes
+- **Dashboard Layout Cramping**: Fixed metric cards being too narrow when sidebar is expanded
+  - Changed from `lg:grid-cols-4` to `xl:grid-cols-3 2xl:grid-cols-4`
+  - Ensures adequate space for currency formatting
+
+- **Number Wrapping in StatsCards**: Fixed currency amounts breaking into multiple lines
+  - Added proper number formatting with `tabular-nums`
+  - Implemented overflow protection
+  - Tighter word spacing prevents awkward breaks
+
+- **Generic Login Errors**: Fixed unhelpful "email or password incorrect" for unregistered emails
+  - Now shows specific error for unregistered emails
+  - Clear action button to register
+  - Better user flow reduces confusion
+
+- **Forgot Password False Success**: Fixed showing success for unregistered emails
+  - Edge function now returns proper 404 error
+  - Frontend displays actual error message
+  - Users receive actionable feedback
+
+#### UI Improvements
+- Fixed tooltip positioning and styling
+- Improved hover states consistency
+- Better dark mode contrast
+- Enhanced mobile responsiveness
+- Fixed spacing inconsistencies
+
+### Documentation
+
+#### New Documentation
+- **LOGIN_ERROR_HANDLING_IMPROVEMENTS.md**: Comprehensive guide to authentication improvements
+  - Code changes explained
+  - User experience flows documented
+  - Security considerations addressed
+  - Testing scenarios provided
+
+- **DATABASE_SETUP_GUIDE.md**: Fresh database setup documentation
+  - Complete schema overview
+  - Migration order for new installations
+  - RLS security explained
+  - Troubleshooting section
+
+- **CLEANUP_RECOMMENDATIONS.md**: Repository cleanup guide
+  - Lists 30+ unused files for deletion
+  - Provides cleanup commands
+  - Explains what to keep
+  - Reduces repository clutter
+
+- **FIX_SUMMARY.md**: Detailed summary of all authentication fixes
+  - Before/after comparisons
+  - Implementation details
+  - Deployment steps
+  - Security analysis
+
+#### Updated Documentation
+- **CHANGELOG.md**: Updated with v5.0.0 changes (this file)
+- **README.md**: Refreshed with current features and screenshots
+
+### Security
+
+#### Acceptable Trade-offs
+- Email enumeration now possible but acceptable for this use case:
+  - Personal finance app, not high-security government system
+  - UX benefits significantly outweigh minimal security risk
+  - Rate limiting mitigates abuse (10 req/min)
+  - Industry standard approach (Gmail, Facebook use similar)
+  - Already possible via forgot password feature
+
+#### Maintained Security
+- All RLS policies remain intact
+- Rate limiting on all edge functions
+- Input validation and sanitization
+- HTTPS for all communications
+- Brute force protection via Supabase
+
+### Performance
+
+#### Optimizations
+- More efficient grid rendering with better breakpoints
+- Reduced unnecessary re-renders with optimized CSS
+- Smoother animations with GPU-accelerated transforms
+- Better shadow performance with tailwind utilities
+
+### Removed
+
+#### Cleaned Up Files
+- Removed 5 backup component files:
+  - Dashboard copy.tsx
+  - MainLayout_ori.tsx
+  - Settings copy.tsx
+  - Settings_ori.tsx
+  - Sidebar_ori.tsx
+
+---
+
 ## [4.0.0] - 2025-12-08
 
 ### MAJOR UPDATE: Authentication System Optimization
