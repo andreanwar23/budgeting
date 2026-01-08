@@ -138,16 +138,38 @@ export function AuthForm() {
           setPassword('');
         }
       } else {
+        // Login: First check if user exists and is verified
+        const userStatus = await checkUserVerificationStatus(email);
+
+        if (!userStatus) {
+          // Network error or unable to check
+          setError('Gagal memeriksa status akun. Periksa koneksi internet Anda.');
+          setLoading(false);
+          return;
+        }
+
+        if (!userStatus.exists) {
+          // Email not registered
+          setError('Email tidak terdaftar. Silakan daftar akun terlebih dahulu.');
+          setLoading(false);
+          return;
+        }
+
+        if (!userStatus.verified) {
+          // Email exists but not verified
+          setUnverifiedEmail(email);
+          setShowUnverifiedModal(true);
+          setError('');
+          setLoading(false);
+          return;
+        }
+
+        // User exists and is verified, attempt login
         const { error } = await signIn(email, password);
 
         if (error) {
-          if (error.message.includes('Email not confirmed')) {
-            // Show improved unverified email modal
-            setUnverifiedEmail(email);
-            setShowUnverifiedModal(true);
-            setError('');
-          } else if (error.message.includes('Invalid login credentials')) {
-            setError('Email atau password salah.');
+          if (error.message.includes('Invalid login credentials')) {
+            setError('Password salah. Silakan coba lagi.');
           } else if (error.message.includes('fetch') || error.message.includes('network')) {
             setError('Gagal terhubung ke server. Periksa koneksi internet Anda dan coba lagi.');
           } else {
@@ -362,6 +384,18 @@ export function AuthForm() {
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
                 <p>{error}</p>
+                {error.includes('Email tidak terdaftar') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSignUp(true);
+                      setError('');
+                    }}
+                    className="mt-3 w-full text-sm font-semibold px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Daftar Akun Baru
+                  </button>
+                )}
                 {verificationEmail && error.includes('Email belum diverifikasi') && (
                   <button
                     type="button"
